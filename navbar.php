@@ -117,7 +117,7 @@
     <li><a href="about.php">About</a></li>
     <li><a href="gallery.php">Gallery</a></li>
     <li><a href="feedbacks.php">Feedbacks</a></li>
-    <li><a href="login.php">Log-in / Sign up</a></li>
+    <li><a href="Login/login.php">Log-in / Sign up</a></li>
   </ul>
 </nav>
 
