@@ -21,7 +21,10 @@
     <link rel="stylesheet" href="fonts/fontawesome/css/font-awesome.min.css">
 
     <link rel="stylesheet" href="css/style.css">
+    
+   <link rel="icon" href="pics/logo2.png" type="image/png">
 
+   
     <style>
       .feedback-card {
         background: #fff;

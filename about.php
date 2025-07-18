@@ -27,7 +27,10 @@
 
     <!-- Custom Style -->
     <link rel="stylesheet" href="css/style.css">
+
+    <link rel="icon" href="pics/logo2.png" type="image/png">
   </head>
+
 
   <body>
 
@@ -125,7 +128,7 @@
       <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
         <div class="card shadow p-4">
           <div class="text-center">
-            <img src="pics/cliff.jpg" class="img-fluid rounded-circle mb-3" style="max-width: 150px;" alt="Owner Photo">
+            <img src="pics/cliff.png" class="img-fluid rounded-circle mb-3" style="max-width: 150px;" alt="Owner Photo">
             <h4 class="mb-1">Clifford Orland C. Palma</h4>
             <p class="text-muted">Founder & Visionary</p>
           </div>
@@ -160,7 +163,34 @@
   </div>
 </section>
 
-
+<!-- Map Section -->
+<section class="section bg-white" id="map-section">
+  <div class="container">
+    <div class="row text-center mb-5">
+      <div class="col-md-12" data-aos="fade-up">
+        <h2 class="heading">📍 Find Us on the Map</h2>
+        <p class="text-muted">Visit Shelton Beach Haven at Punta Taytay, Bacolod City</p>
+        <hr class="w-25 mx-auto" style="border-top: 3px solid #7ab4a1; opacity: 0.5;">
+      </div>
+    </div>
+    <div class="row justify-content-center" data-aos="zoom-in">
+      <div class="col-md-10 shadow rounded overflow-hidden" style="border: 4px solid #e08f5f; border-radius: 20px;">
+        <div class="map-responsive" style="overflow:hidden; padding-bottom:56.25%; position:relative; height:0;">
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d628.1374894981578!2d122.9095004!3d10.6020812!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33aecf7a15acf601%3A0x7226652524a1c46c!2sSHELTON%20BEACH%20HAVEN!5e0!3m2!1sen!2sph!4v1721280000000!5m2!1sen!2sph" 
+            width="100%" 
+            height="100%" 
+            frameborder="0" 
+            style="border:0; position:absolute; top:0; left:0;" 
+            allowfullscreen="" 
+            loading="lazy" 
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
     <!-- CTA Section -->
     <section class="section bg-image overlay" style="background-image: url('pics/5.png');">

@@ -21,6 +21,8 @@
     
     <link rel="stylesheet" href="fonts/ionicons/css/ionicons.min.css">
     <link rel="stylesheet" href="fonts/fontawesome/css/font-awesome.min.css">
+    
+    <link rel="icon" href="pics/logo2.png" type="image/png">
 
     <!-- Theme Style -->
     <link rel="stylesheet" href="css/style.css">
@@ -121,7 +123,7 @@
           <div class="col-md-12 col-lg-4 order-lg-1" data-aos="fade-up">
             <h2 class="heading">Welcome!</h2>
             <p class="mb-4">Tucked along the shores of Negros Occidental, Shelton Beach Resort is more than a destination — it's a place where families come together, friends reconnect, and the ocean becomes part of every memory.</p>
-            <p><a href="#" class="btn btn-primary text-white py-2 mr-3">Book Now!</a> <span class="mr-3 font-family-serif"><em>but</em></span> <a href="map.html"  data-fancybox class="text-uppercase letter-spacing-1">Log-in first!</a></p>
+            <p><a href="backend/cutomers/customers.php" class="btn btn-primary text-white py-2 mr-3">Book Now!</a> <span class="mr-3 font-family-serif"><em>but</em></span> <a href="Login/login.php"  data-fancybox class="text-uppercase letter-spacing-1">Log-in first!</a></p>
           </div>
           
         </div>

@@ -1,0 +1,65 @@
+#map-container {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    height: auto;
+    aspect-ratio: 1920 / 1080;
+    background: url('../image/map.jpg') no-repeat center center;
+    background-size: contain;
+    margin-bottom: 20px;
+}
+
+.marker {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.marker.selected {
+    background-color: blue !important;
+}
+
+#details-container {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 30%;
+    height: 100%;
+    background: white;
+    color: #000; /* ✅ Ensure text is black */
+    padding: 20px;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+
+#details-container.show {
+    display: block;
+}
+
+button:disabled {
+    background-color: #ccc !important;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    #map-container {
+        height: 300px;
+    }
+
+    .marker {
+        width: 30px;
+        height: 30px;
+    }
+
+    #details-container {
+        width: 100%;
+        height: auto;
+        position: static;
+        box-shadow: none;
+    }
+}
