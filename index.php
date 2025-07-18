@@ -159,7 +159,7 @@
                 <a href="images/slider-6.jpg" data-fancybox="images" data-caption="Caption for this image"><img src="pics/5.png" alt="Image placeholder" class="img-fluid"></a>
               </div>
               <div class="slider-item">
-                <a href="images/slider-7.jpg" data-fancybox="images" data-caption="Caption for this image"><img src="pics/7.png" alt="Image placeholder" class="img-fluid"></a>
+                <a href="images/slider-7.jpg" data-fancybox="images" data-caption="Caption for this image"><img src="pics/6.png" alt="Image placeholder" class="img-fluid"></a>
               </div>
             </div>
             <!-- END slider -->
