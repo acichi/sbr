@@ -116,7 +116,7 @@
             <figure class="img-absolute">
               <img src="pics/logo2.png" alt="Image" class="img-fluid">
             </figure>
-            <img src="pics/front.png" alt="Image" class="img-fluid rounded">
+            <img src="pics/one.png" alt="Image" class="img-fluid rounded">
           </div>
           <div class="col-md-12 col-lg-4 order-lg-1" data-aos="fade-up">
             <h2 class="heading">Welcome!</h2>
@@ -159,7 +159,7 @@
                 <a href="images/slider-6.jpg" data-fancybox="images" data-caption="Caption for this image"><img src="pics/5.png" alt="Image placeholder" class="img-fluid"></a>
               </div>
               <div class="slider-item">
-                <a href="images/slider-7.jpg" data-fancybox="images" data-caption="Caption for this image"><img src="pics/6.png" alt="Image placeholder" class="img-fluid"></a>
+                <a href="images/slider-7.jpg" data-fancybox="images" data-caption="Caption for this image"><img src="pics/7.png" alt="Image placeholder" class="img-fluid"></a>
               </div>
             </div>
             <!-- END slider -->
@@ -209,7 +209,7 @@
       <div class="col-lg-4 col-md-6 col-sm-6 col-12 post" data-aos="fade-up" data-aos-delay="200">
         <div class="media media-custom d-block mb-4 h-100">
           <a href="https://attracttour.com/2016/04/full-details-of-shelton-beach-resort-punta-taytay-bacolod-city-photos-videos/" class="mb-4 d-block" target="_blank">
-            <img src="pics/news.jpg" alt="AttractTour Feature" class="img-fluid">
+            <img src="pics/news.png" alt="AttractTour Feature" class="img-fluid">
           </a>
           <div class="media-body">
             <span class="meta-post">April 18, 2016</span>
@@ -229,7 +229,7 @@
       <div class="col-lg-4 col-md-6 col-sm-6 col-12 post" data-aos="fade-up" data-aos-delay="300">
         <div class="media media-custom d-block mb-4 h-100">
           <a href="https://www.facebook.com/SheltonBeachHavenResortPuntaTayTayBC/" class="mb-4 d-block" target="_blank">
-            <img src="pics/second.jpg" alt="Facebook Page" class="img-fluid">
+            <img src="pics/second.png" alt="Facebook Page" class="img-fluid">
           </a>
           <div class="media-body">
             <span class="meta-post">Updated Weekly</span>
