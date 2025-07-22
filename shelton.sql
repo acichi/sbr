@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 21, 2025 at 08:00 AM
+-- Generation Time: Jul 21, 2025 at 05:39 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -30,7 +30,8 @@ SET time_zone = "+00:00";
 CREATE TABLE `facility` (
   `id` int(11) NOT NULL,
   `name` varchar(45) NOT NULL,
-  `location` point NOT NULL,
+  `pin_x` float NOT NULL,
+  `pin_y` float NOT NULL,
   `details` text NOT NULL,
   `status` varchar(45) NOT NULL,
   `price` float NOT NULL,
@@ -38,6 +39,14 @@ CREATE TABLE `facility` (
   `date_added` date NOT NULL,
   `date_updated` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `facility`
+--
+
+INSERT INTO `facility` (`id`, `name`, `pin_x`, `pin_y`, `details`, `status`, `price`, `image`, `date_added`, `date_updated`) VALUES
+(1, 'c1', 100.39, 148.79, 'test', 'Available', 1000, 'images/687d41e2bb8ad_1.png', '2025-07-21', '0000-00-00'),
+(2, 'test', 95.09, 147.58, 'test', 'Available', 1000, 'images/687d42f1ae7cd_1.png', '2025-07-21', '0000-00-00');
 
 -- --------------------------------------------------------
 
@@ -52,6 +61,20 @@ CREATE TABLE `feedback` (
   `feedback` text NOT NULL,
   `rate` int(11) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `otp`
+--
+
+CREATE TABLE `otp` (
+  `id` int(11) NOT NULL,
+  `otp` varchar(10) NOT NULL,
+  `status` varchar(45) NOT NULL,
+  `date_created` timestamp NOT NULL DEFAULT current_timestamp(),
+  `date_updated` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -126,6 +149,14 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `fullname`, `email`, `number`, `username`, `password`, `gender`, `role`, `address`, `date_added`, `date_updated`) VALUES
+(1, 'Jeremy G. Lila', 'jeremylila@email.com', '+6396215219', 'jeremylila123', '$2y$10$4b7HjQgpbeIZQuiCWrT61uqciwhoDjDmu7gwMlWa8ZQGSIWWaKOOG', 'Male', 'customer', 'Bago Ciy', '2025-07-18 23:40:12', '2025-07-18 23:40:12'),
+(2, 'test', 'test@email.com', '+6396215219', 'test123', '$2y$10$.AGAsFjjszXdfqMFUqmYne0g7.I4Lv86fx5QXkG2F8XJeJACJm8fK', 'Male', 'customer', 'Bago City', '2025-07-19 00:05:08', '2025-07-19 00:05:08');
+
+--
 -- Indexes for dumped tables
 --
 
@@ -139,6 +170,12 @@ ALTER TABLE `facility`
 -- Indexes for table `feedback`
 --
 ALTER TABLE `feedback`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `otp`
+--
+ALTER TABLE `otp`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -173,12 +210,18 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `facility`
 --
 ALTER TABLE `facility`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `feedback`
 --
 ALTER TABLE `feedback`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `otp`
+--
+ALTER TABLE `otp`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -203,7 +246,7 @@ ALTER TABLE `transaction`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
