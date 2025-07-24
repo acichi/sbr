@@ -1,19 +1,21 @@
 <?php
 session_start();
 require '../properties/connection.php';
+require '../properties/sweetalert.php'; // ✅ Include SweetAlert function
 
 // Check if OTP and registration data exist
 if (!isset($_SESSION['otp'], $_SESSION['registration'])) {
-    die("❌ Session expired or invalid. Please register again.");
+    showSweetAlert("❌ Session expired or invalid. Please register again.", "register.php", "error");
 }
 
+// Check OTP
 $input_otp = $_POST['otp'] ?? '';
 if ($input_otp != $_SESSION['otp']) {
-    die("❌ Invalid OTP. Please try again.");
+    showSweetAlert("❌ Invalid OTP. Please try again.", "otp.php", "error");
 }
 
-// Extract data
-$data = $_SESSION['registration'];
+// Extract registration data
+$data     = $_SESSION['registration'];
 $name     = $data['name'];
 $email    = $data['email'];
 $username = $data['username'];
@@ -32,7 +34,7 @@ $check->store_result();
 
 if ($check->num_rows > 0) {
     $check->close();
-    die("❌ Username or email already exists.");
+    showSweetAlert("❌ Username or email already exists.", "register.php", "error");
 }
 
 // Insert new user
@@ -41,14 +43,10 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 $stmt->bind_param("ssssssssss", $name, $email, $number, $username, $password, $gender, $role, $address, $now, $now);
 
 if ($stmt->execute()) {
-    unset($_SESSION['otp']);
-    unset($_SESSION['registration']);
-    echo "<script>
-        alert('✅ Registration successful! Please log in.');
-        window.location.href = 'login.php';
-    </script>";
+    unset($_SESSION['otp'], $_SESSION['registration']);
+    showSweetAlert("✅ Registration successful! Please log in.", "login.php", "success");
 } else {
-    echo "❌ Something went wrong during registration.";
+    showSweetAlert("❌ Something went wrong during registration.", "register.php", "error");
 }
 
 $stmt->close();

@@ -1,34 +1,112 @@
-<?php include 'properties/connection.php'; ?>
+<?php
+// gallery.php
+?>
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Gallery | Shelton Beach Resort</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<section class="section bg-light">
-  <div class="container">
-    <div class="row justify-content-center text-center mb-5">
-      <div class="col-md-8">
-        <h2 class="heading" data-aos="fade-up">Gallery</h2>
-        <p data-aos="fade-up" data-aos-delay="100">Photos uploaded by our admins — explore our scenic paradise!</p>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- CSS Libraries -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/animate.css">
+    <link rel="stylesheet" href="css/owl.carousel.min.css">
+    <link rel="stylesheet" href="css/aos.css">
+    <link rel="stylesheet" href="css/fancybox.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="pics/logo2.png" type="image/png">
+  </head>
+
+  <body>
+
+    <!-- Navbar -->
+    <?php include 'navbar.php'; ?>
+
+    <!-- Hero Section -->
+    <section class="site-hero overlay" style="background-image: url('pics/bg.png');" data-stellar-background-ratio="0.5">
+      <div class="container">
+        <div class="row site-hero-inner justify-content-center align-items-center">
+          <div class="col-md-10 text-center" data-aos="fade-up">
+            <span class="custom-caption text-uppercase text-white d-block mb-3">Shelton Beach Resort</span>
+            <h1 class="heading">Our Memories</h1>
+          </div>
+        </div>
       </div>
-    </div>
+      <a class="mouse smoothscroll" href="#gallery-section">
+        <div class="mouse-icon">
+          <span class="mouse-wheel"></span>
+        </div>
+      </a>
+    </section>
 
-    <div class="row gallery-flex" data-aos="fade-up" data-aos-delay="200">
-      <?php
-        $sql = "SELECT * FROM gallery_images ORDER BY uploaded_at DESC";
-        $result = mysqli_query($conn, $sql);
-
-        if (mysqli_num_rows($result) > 0) {
-          while ($row = mysqli_fetch_assoc($result)) {
-            echo '<div class="gallery-item">';
-            echo '<a href="uploads/'.$row['filename'].'" data-fancybox="gallery" data-caption="'.$row['caption'].'">';
-            echo '<img src="uploads/'.$row['filename'].'" alt="Gallery Image">';
-            echo '</a>';
-            if ($row['caption']) {
-              echo '<p class="text-center mt-2">'.$row['caption'].'</p>';
-            }
-            echo '</div>';
+    <!-- Gallery Section -->
+    <section class="section bg-light" id="gallery-section">
+      <div class="container">
+        <div class="row text-center mb-5">
+          <div class="col-md-12" data-aos="fade-up">
+            <h2 class="heading">Our Memories</h2>
+            <p class="text-muted">Capture Yours. Visit Us Today!</p>
+          </div>
+        </div>
+        <div class="row">
+          <?php
+          // Sample static images — replace this loop with dynamic PHP code later
+          $images = ['1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg', '6.jpg'];
+          foreach ($images as $img) {
+            echo '
+            <div class="col-md-4 col-sm-6 mb-4" data-aos="zoom-in">
+              <a href="uploads/' . $img . '" class="fancybox" data-fancybox="gallery">
+                <img src="uploads/' . $img . '" class="img-fluid rounded shadow-sm" alt="Gallery Image">
+              </a>
+            </div>';
           }
-        } else {
-          echo '<p class="text-center">No images yet. Stay tuned!</p>';
-        }
-      ?>
-    </div>
-  </div>
-</section>
+          ?>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section bg-image overlay" style="background-image: url('pics/5.png');">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-12 col-md-6 text-center mb-4 mb-md-0 text-md-left" data-aos="fade-up">
+            <h2 class="text-white font-weight-bold">Capture Yours. Visit Us Today!</h2>
+          </div>
+          <div class="col-12 col-md-6 text-center text-md-right" data-aos="fade-up" data-aos-delay="200">
+            <a href="reservation.html" class="btn btn-outline-white-primary py-3 text-white px-5">Reserve Now!</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <?php include 'footer.php'; ?>
+
+    <!-- JS Libraries -->
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script src="js/jquery-migrate-3.0.1.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/owl.carousel.min.js"></script>
+    <script src="js/jquery.stellar.min.js"></script>
+    <script src="js/jquery.fancybox.min.js"></script>
+    <script src="js/aos.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+      $(document).ready(function() {
+        $('[data-fancybox="gallery"]').fancybox({
+          buttons: [
+            "zoom", "slideShow", "thumbs", "close"
+          ]
+        });
+      });
+    </script>
+
+  </body>
+</html>
