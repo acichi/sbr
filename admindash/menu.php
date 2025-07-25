@@ -10,17 +10,17 @@
       </a>
     </li>
     <li>
-      <a href="#Reservations" id="reservation-link">
-        <i class='bx bxs-shopping-bag-alt'></i>
-        <span class="text">Reservations</span>
-      </a>
-    </li>
-    <li>
-      <a href="#Reports">
+      <a href="#reports">
         <i class='bx bxs-doughnut-chart'></i>
         <span class="text">Reports</span>
       </a>
     </li>
+      <li>
+      <a href="#Reservations" id="reservation-link">
+        <i class='bx bxs-shopping-bag-alt'></i>
+        <span class="text">Reservations</span>
+      </a>
+    </li>  
     <li>
       <a href="#">
         <i class='bx bxs-message-dots'></i>
