@@ -581,3 +581,51 @@ body {
   color: var(--orange);
   font-weight: 700;
 }
+.section {
+  margin-top: 40px;
+  padding: 20px;
+  background: var(--light);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.progress-bar-container {
+  width: 100%;
+  background: #eee;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.progress-bar {
+  height: 25px;
+  background: #4CAF50;
+  color: white;
+  text-align: center;
+  line-height: 25px;
+  border-radius: 5px;
+}
+
+.card {
+  background: #f9f9f9;
+  padding: 15px;
+  border-left: 5px solid #4CAF50;
+  margin: 10px 0;
+}
+.reservation-status {
+  background-color: #f0f0f0;
+  border-left: 5px solid #7ab4a1;
+  padding: 20px;
+  margin-bottom: 20px;
+  font-family: 'Playfair Display', serif;
+}
+.reservation-status ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+.reservation-status li {
+  margin-bottom: 10px;
+}
+.reservation-status .status-step.active {
+  color: #7ab4a1;
+  font-weight: bold;
+}
