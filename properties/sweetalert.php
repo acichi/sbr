@@ -10,7 +10,7 @@ function showSweetAlert($message, $redirectUrl, $type = 'success') {
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     body {
-      background: url('../images/bg.png') no-repeat center center fixed;
+      background: url('../pics/bg.png') no-repeat center center fixed;
       background-size: cover;
       font-family: 'Playfair Display', serif;
     }

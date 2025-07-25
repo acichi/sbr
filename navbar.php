@@ -28,11 +28,19 @@
   }
 
   .navbar .logo {
+    display: flex;
+    align-items: center;
     font-family: 'Playfair Display', serif;
-    font-size: 32px;
+    font-size: 28px;
     color: #fff;
     text-decoration: none;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .navbar .logo img {
+    height: 40px;
+    margin-right: 12px;
+    vertical-align: middle;
   }
 
   .navbar ul {
@@ -106,7 +114,10 @@
 
 <!-- HTML Navbar -->
 <nav class="navbar">
-  <a class="logo" href="index.php">Shelton Beach Haven</a>
+  <a class="logo" href="index.php">
+    <img src="pics/logo2.png" alt="Shelton Logo" />
+    Shelton Beach Haven
+  </a>
   <div class="menu-toggle" onclick="toggleMenu()">
     <span></span>
     <span></span>

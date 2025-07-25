@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="fonts/ionicons/css/ionicons.min.css">
     <link rel="stylesheet" href="fonts/fontawesome/css/font-awesome.min.css">
     
-    <link rel="icon" href="pics/logo2.png" type="image/png">
+    <link rel="icon" href="pics/logo2.jpg" type="image/png">
 
     <!-- Theme Style -->
     <link rel="stylesheet" href="css/style.css">

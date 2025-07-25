@@ -17,7 +17,7 @@
       </li>
       <li>
         <a href="map_settings.php">
-          <i class='bx bxs-building-fill-alt'></i>
+          <i class='bx bxs-building'></i>
           <span class="text text-primary">Reserve Now</span>
         </a>
       </li>
@@ -36,7 +36,7 @@
     </ul>
     <ul class="side-menu">
       <li>
-        <a href="#" class="logout">
+        <a href="logout.php" class="logout">
           <i class='bx bxs-log-out-circle'></i>
           <span class="text">Logout</span>
         </a>

@@ -1,8 +1,24 @@
+<?php
+session_start();
+require '../properties/connection.php';
+
+// Ensure user is logged in and is admin
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header("Location: ../login/login.php");
+    exit;
+}
+
+// Safely extract username or fallback
+$username = isset($_SESSION['user']['username']) ? htmlspecialchars($_SESSION['user']['username']) : 'Admin';
+?>
+
       <div class="head-title">
         <div class="left">
           <h1>Dashboard</h1>
           <ul class="breadcrumb">
-            <li><a class="active" href="#">Welcome back Admin Aci!</a></li>
+            <li><a class="active" href="#">
+                <?php echo "Welcome back, $username!"; ?>
+              </a></li>
           </ul>
         </div>
         <a href="#" class="btn-download">

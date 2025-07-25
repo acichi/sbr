@@ -83,10 +83,12 @@ if ($result->num_rows === 1) {
         ];
         $_SESSION['fullname'] = $user['fullname'];
 
+        $welcomeMessage = "✅ Welcome back, " . htmlspecialchars($user['fullname']) . "!";
+
         if ($user['role'] === 'admin') {
-            showSweetAlert('✅ Login successful!', '../admindash/admindash.php', 'success');
+            showSweetAlert($welcomeMessage, '../admindash/admindash.php', 'success');
         } else {
-            showSweetAlert('✅ Login successful!', '../cusdash/cusdash.php', 'success');
+            showSweetAlert($welcomeMessage, '../cusdash/cusdash.php', 'success');
         }
     } else {
         showSweetAlert('❌ Incorrect password.', 'login.php', 'error');
