@@ -116,21 +116,21 @@ $allAccounts = $conn->query("
   <h3>Upload to Gallery</h3>
 
   <form id="uploadForm" enctype="multipart/form-data">
-    <div class="form-group">
-      <label for="description">Description</label>
-      <textarea id="description" name="description" required></textarea>
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" name="description" required></textarea>
     </div>
 
-    <div class="form-group">
-      <label>Upload Image(s)</label>
-      <div id="drop-area">
-        <p>Drag & drop files here or click to browse</p>
+    <div class="mb-3">
+      <label class="form-label">Drag & Drop Files Below or Click to Browse</label>
+      <div id="drop-area" class="border border-2 border-primary rounded p-4 text-center bg-white" style="cursor:pointer">
+        <p>Drop files here or click to browse</p>
         <input type="file" id="files" name="files[]" multiple hidden>
       </div>
-      <div id="fileList"></div>
+      <div id="fileList" class="mt-3"></div>
     </div>
 
-    <button type="submit" class="upload-btn">Upload</button>
+    <button type="submit" class="btn btn-success">Upload</button>
   </form>
 </div>
 
@@ -183,6 +183,7 @@ $allAccounts = $conn->query("
 <!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="js/upload_script.js"></script>
 <script>
 // Animate counts
 document.querySelectorAll('.box-info h3').forEach(el => {
