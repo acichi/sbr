@@ -54,7 +54,7 @@ function showFacilityModal(facility) {
               <input type="hidden" name="facility_name" value="${name}">
               <div class="mb-3">
                 <label for="reservee" class="form-label">Your Name</label>
-                <input type="text" class="form-control" id="reservee" name="reservee" required>
+                <input type="text" class="form-control" id="reservee" name="reservee" value="$_SESSION['fullname']" readonly>
               </div>
               <div class="mb-3">
                 <label for="date_start" class="form-label">Start Date</label>

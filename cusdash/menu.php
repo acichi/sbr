@@ -16,7 +16,7 @@
         </a>
       </li>
       <li>
-        <a href="map_settings.php">
+        <a href="map_client.php">
           <i class='bx bxs-building'></i>
           <span class="text text-primary">Reserve Now</span>
         </a>

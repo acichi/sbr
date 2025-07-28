@@ -66,7 +66,7 @@ Marker Container
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="facility-modal-body">
-        <!-- Content gets filled by JS -->
+        Content gets filled by JS
       </div>
     </div>
   </div>
