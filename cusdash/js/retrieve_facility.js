@@ -1,13 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
   const svg = document.getElementById('map');
+
   fetch('retrieve_facility.php')
     .then(response => response.json())
     .then(data => {
       data.forEach(facility => {
-        const { id, name, pin_x, pin_y, status, image, details, price } = facility;
+        const { id, name, pin_x, pin_y, status, image, details, price, latest_reserved_until } = facility;
+
         const normalizedStatus = status.trim().toLowerCase();
         const color = normalizedStatus === 'available' ? 'green' :
                       normalizedStatus === 'pending' ? 'yellow' : 'red';
+
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('cx', pin_x);
         circle.setAttribute('cy', pin_y);
@@ -16,23 +19,64 @@ document.addEventListener('DOMContentLoaded', () => {
         circle.setAttribute('data-id', id);
         circle.style.cursor = 'pointer';
         circle.setAttribute('title', name);
+
         circle.addEventListener('click', () => {
+          let availabilityMessage = 'No reservations yet.';
+          let countdown = '';
+
+          if (latest_reserved_until) {
+            const now = new Date();
+            const reservedUntil = new Date(latest_reserved_until);
+
+            if (now < reservedUntil) {
+              const remainingTime = reservedUntil - now;
+              const hours = Math.floor((remainingTime % 86400000) / 3600000);
+              const minutes = Math.floor((remainingTime % 3600000) / 60000);
+              const seconds = Math.floor((remainingTime % 60000) / 1000);
+
+              availabilityMessage = `Unavailable until ${reservedUntil.toLocaleString()}`;
+              countdown = ` (Available in ${hours}h ${minutes}m ${seconds}s)`;
+            } else {
+              availabilityMessage = `Available and can still be booked until ${reservedUntil.toLocaleString()}`;
+            }
+          }
+
           showFacilityModal({
             name,
             details,
             status: normalizedStatus,
             image: `${image}`,
-            price
+            price,
+            availability: availabilityMessage + countdown
           });
         });
+
         svg.appendChild(circle);
       });
     })
     .catch(error => console.error('Error fetching facility data:', error));
 });
 
+
 function showFacilityModal(facility) {
-  const { name, details, status, image, price } = facility;
+  const { name, details, status, image, price, latest_reserved_until } = facility;
+
+  let availabilityMessage = 'No prior reservations.';
+  let countdownHTML = '';
+  let countdownInterval = null;
+
+  const now = new Date();
+  const reservedUntil = latest_reserved_until ? new Date(latest_reserved_until) : null;
+
+  if (reservedUntil) {
+    if (now < reservedUntil) {
+      availabilityMessage = `Unavailable until ${reservedUntil.toLocaleString()}`;
+      countdownHTML = `<span id="countdownTimer"></span>`;
+    } else {
+      availabilityMessage = `Available — can still be booked until ${reservedUntil.toLocaleString()}`;
+    }
+  }
+
   const modalContent = `
     <div class="modal fade" id="facilityModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
@@ -45,6 +89,7 @@ function showFacilityModal(facility) {
             <img src="../admindash/${image}" class="img-fluid mb-3" alt="${name}">
             <p><strong>Status:</strong> ${status}</p>
             <p><strong>Price:</strong> ₱${price} per day</p>
+            <p><strong>Availability:</strong> ${availabilityMessage} ${countdownHTML}</p>
             <p>${details}</p>
             <div class="text-end mt-4">
               <button class="btn btn-success me-2" id="reserveBtn">Reserve</button>
@@ -95,13 +140,32 @@ function showFacilityModal(facility) {
   const modal = new bootstrap.Modal(document.getElementById('facilityModal'));
   modal.show();
 
+  // Start countdown if needed
+  if (reservedUntil && now < reservedUntil) {
+    function updateCountdown() {
+      const now = new Date();
+      const remainingTime = reservedUntil - now;
+      if (remainingTime <= 0) {
+        document.getElementById('countdownTimer').textContent = ' — Now Available!';
+        clearInterval(countdownInterval);
+        return;
+      }
+      const hours = Math.floor((remainingTime % 86400000) / 3600000);
+      const minutes = Math.floor((remainingTime % 3600000) / 60000);
+      const seconds = Math.floor((remainingTime % 60000) / 1000);
+      document.getElementById('countdownTimer').textContent =
+        ` — Available in ${hours}h ${minutes}m ${seconds}s`;
+    }
+    updateCountdown();
+    countdownInterval = setInterval(updateCountdown, 1000);
+  }
+
   setTimeout(() => {
     const form = document.getElementById('reservationForm');
     const amountField = document.getElementById('amount');
     const startField = document.getElementById('date_start');
     const endField = document.getElementById('date_end');
 
-    // Helper to recalculate total
     function recalculateAmount() {
       const start = new Date(startField.value);
       const end = new Date(endField.value);
@@ -115,7 +179,6 @@ function showFacilityModal(facility) {
       }
     }
 
-    // Trigger calculation on input
     startField.addEventListener('input', recalculateAmount);
     endField.addEventListener('input', recalculateAmount);
 
