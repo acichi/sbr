@@ -3,7 +3,7 @@ session_start();
 require '../properties/connection.php';
 
 if (!isset($_SESSION['user'])) {
-    header("Location: ../login.php");
+    header("Location: ../Login/login.php");
     exit;
 }
 

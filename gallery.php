@@ -11,7 +11,7 @@
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- CSS Libraries -->
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/animate.css">
@@ -54,18 +54,7 @@
           </div>
         </div>
         <div class="row">
-          <?php
-          // Sample static images — replace this loop with dynamic PHP code later
-          $images = ['1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg', '6.jpg'];
-          foreach ($images as $img) {
-            echo '
-            <div class="col-md-4 col-sm-6 mb-4" data-aos="zoom-in">
-              <a href="uploads/' . $img . '" class="fancybox" data-fancybox="gallery">
-                <img src="uploads/' . $img . '" class="img-fluid rounded shadow-sm" alt="Gallery Image">
-              </a>
-            </div>';
-          }
-          ?>
+          <?php include("gallery/gallery_view.php");?>
         </div>
       </div>
     </section>

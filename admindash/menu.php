@@ -20,7 +20,13 @@
         <i class='bx bxs-shopping-bag-alt'></i>
         <span class="text">Reservations</span>
       </a>
-    </li>  
+    </li>
+    <li>
+      <a href="../gallery/gallery.php" id="gallery-link">
+        <i class='bx bxs-shopping-bag-alt'></i>
+        <span class="text">Reservations</span>
+      </a>
+    </li>   
     <li>
       <a href="#">
         <i class='bx bxs-message-dots'></i>

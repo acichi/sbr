@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPage = 1;
 
   function loadGallery(page = 1) {
-    fetch(`gallery_data.php?page=${page}&limit=${limit}`)
+    fetch(`gallery/gallery_data.php?page=${page}&limit=${limit}`)
       .then(res => res.json())
       .then(data => {
         gallery.innerHTML = "";
@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(item.location);
           const content = isImage
-            ? `<img src="${item.location}" class="card-img-top" alt="Preview">`
+            ? `<img src="gallery/${item.location}" class="card-img-top" alt="Preview">`
             : `<div class="text-center py-5 text-secondary">No preview</div>`;
 
           card.innerHTML = `
