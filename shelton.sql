@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 21, 2025 at 05:39 AM
+-- Generation Time: Jul 28, 2025 at 07:39 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -46,7 +46,7 @@ CREATE TABLE `facility` (
 
 INSERT INTO `facility` (`id`, `name`, `pin_x`, `pin_y`, `details`, `status`, `price`, `image`, `date_added`, `date_updated`) VALUES
 (1, 'c1', 100.39, 148.79, 'test', 'Available', 1000, 'images/687d41e2bb8ad_1.png', '2025-07-21', '0000-00-00'),
-(2, 'test', 95.09, 147.58, 'test', 'Available', 1000, 'images/687d42f1ae7cd_1.png', '2025-07-21', '0000-00-00');
+(2, 'test', 200.09, 147.58, 'test', 'Available', 1000, 'images/687d42f1ae7cd_1.png', '2025-07-21', '0000-00-00');
 
 -- --------------------------------------------------------
 
@@ -66,6 +66,20 @@ CREATE TABLE `feedback` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `gallery`
+--
+
+CREATE TABLE `gallery` (
+  `id` int(11) NOT NULL,
+  `description` varchar(100) NOT NULL,
+  `location` varchar(100) NOT NULL,
+  `date_added` date NOT NULL,
+  `date_updated` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `otp`
 --
 
@@ -75,6 +89,24 @@ CREATE TABLE `otp` (
   `status` varchar(45) NOT NULL,
   `date_created` timestamp NOT NULL DEFAULT current_timestamp(),
   `date_updated` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pending_transactions`
+--
+
+CREATE TABLE `pending_transactions` (
+  `id` int(11) NOT NULL,
+  `transaction_id` varchar(255) NOT NULL,
+  `reservee` varchar(255) NOT NULL,
+  `facility_name` varchar(255) NOT NULL,
+  `amount_paid` decimal(10,2) NOT NULL,
+  `date_checkin` datetime NOT NULL,
+  `date_checkout` datetime NOT NULL,
+  `date_booked` date NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -173,10 +205,23 @@ ALTER TABLE `feedback`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `gallery`
+--
+ALTER TABLE `gallery`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `otp`
 --
 ALTER TABLE `otp`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `pending_transactions`
+--
+ALTER TABLE `pending_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `transaction_id` (`transaction_id`);
 
 --
 -- Indexes for table `receipt`
@@ -219,9 +264,21 @@ ALTER TABLE `feedback`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `gallery`
+--
+ALTER TABLE `gallery`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `otp`
 --
 ALTER TABLE `otp`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `pending_transactions`
+--
+ALTER TABLE `pending_transactions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
