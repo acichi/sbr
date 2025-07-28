@@ -24,7 +24,7 @@
     <li>
       <a href="../gallery/gallery.php" id="gallery-link">
         <i class='bx bxs-shopping-bag-alt'></i>
-        <span class="text">Reservations</span>
+        <span class="text">Gallery Manager</span>
       </a>
     </li>   
     <li>
