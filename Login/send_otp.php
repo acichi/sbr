@@ -1,7 +1,7 @@
 <?php
 function sendSMS($recipients, $message) {
-    $deviceId = '686e56ad633a2bfcd9e7cc09';  // your device ID
-    $apiKey   = '8d25dfcd-4a88-434c-92cb-15fcdd46c933';  // your API key
+    $deviceId = '6887177d6eec0f67df7d3daa';  // your device ID
+    $apiKey   = '0d2de39f-8e1e-4996-a699-9d196a5e62d9';  // your API key
 
     $url = "https://api.textbee.dev/api/v1/gateway/devices/$deviceId/send-sms";
 

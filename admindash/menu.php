@@ -16,39 +16,27 @@
       </a>
     </li>
       <li>
-      <a href="#Reservations" id="reservation-link">
+      <a href="#reservation" id="reservation-link">
         <i class='bx bxs-shopping-bag-alt'></i>
         <span class="text">Reservations</span>
       </a>
     </li>
-    <li>
-      <a href="../gallery/gallery.php" id="gallery-link">
-        <i class='bx bxs-shopping-bag-alt'></i>
-        <span class="text">Gallery Manager</span>
+        <li>
+      <a href="#accounts">
+        <i class='bx bxs-group'></i>
+        <span class="text">Accounts</span>
       </a>
-    </li>   
+    </li> 
+            <li>
+      <a href="#feedback">
+        <i class='bx bxs-star'></i>
+        <span class="text">Manage Feedbacks</span>
+      </a>
+    </li> 
     <li>
       <a href="#">
         <i class='bx bxs-message-dots'></i>
         <span class="text">Message</span>
-      </a>
-    </li>
-    <li>
-      <a href="#">
-        <i class='bx bxs-group'></i>
-        <span class="text">Accounts</span>
-      </a>
-    </li>
-    <li>
-      <a href="manage_feedbacks.php">
-        <i class='bx bxs-star'></i>
-        <span class="text">Manage Feedbacks</span>
-      </a>
-    </li>
-    <li>
-      <a href="book_walkins.php">
-        <i class='bx bxs-calendar-check'></i>
-        <span class="text">Book Walk-ins</span>
       </a>
     </li>
   </ul>
@@ -57,6 +45,18 @@
       <a href="map_settings.php">
         <i class='bx bxs-cog'></i>
         <span class="text">Map Settings</span>
+      </a>
+    </li>
+    <li>
+      <a href="book_walkins.php">
+        <i class='bx bxs-calendar-check'></i>
+        <span class="text">Book Walk-ins</span>
+      </a>
+    </li>
+                <li>
+      <a href="../gallery/gallery.php" id="gallery-link">
+        <i class='bx bxs-camera'></i>
+        <span class="text">Gallery Uploads</span>
       </a>
     </li>
     <li>

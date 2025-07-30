@@ -1,13 +1,14 @@
-// create_payment.php
 <?php
 require '../properties/connection.php';
 
 $rawData = file_get_contents("php://input");
 $data = json_decode($rawData, true);
 
+// Convert amount to centavos for PayMongo
 $amount = (float)$data['amount'] * 100;
 $paymentType = strtolower($data['payment_type']);
 
+// Normalize card-based types for PayMongo
 $validTypes = ['gcash', 'paymaya', 'card'];
 if ($paymentType === 'visa' || $paymentType === 'mastercard') {
     $paymentType = 'card';
@@ -62,30 +63,58 @@ if ($err) {
 
 $res = json_decode($response, true);
 
-if (isset($res['data']['id']) && isset($res['data']['attributes']['checkout_url'])) {
-    $stmt = $conn->prepare("INSERT INTO pending_transactions (
-        transaction_id, reservee, facility_name, amount_paid,
-        date_checkin, date_checkout, date_booked
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)");
+// Ensure successful creation of checkout session
+if (
+    isset($res['data']['id']) &&
+    isset($res['data']['attributes']['checkout_url'])
+) {
+    $transactionId   = $res['data']['id'];
+    $checkoutUrl     = $res['data']['attributes']['checkout_url'];
+    $reservee        = $data['reservee'];
+    $facilityName    = $data['facility_name'];
+    $amountPaid      = $data['amount']; // In pesos
+    $balance         = 0; // Default
+    $dateCheckin     = $data['date_start'];
+    $dateCheckout    = $data['date_end'];
+    $timestamp       = date('Y-m-d H:i:s');
+    $dateBooked      = $data['date_booked'];
+    $paymentTypeDB   = ucfirst($data['payment_type']); // Store as: GCash, Visa, etc.
 
-    $stmt->bind_param("sssdsss",
-        $res['data']['id'],
-        $data['reservee'],
-        $data['facility_name'],
-        $data['amount'],
-        $data['date_start'],
-        $data['date_end'],
-        $data['date_booked']
+    // Insert into receipt table
+    $stmt = $conn->prepare("INSERT INTO receipt (
+        transaction_id, reservee, facility_name, amount_paid, balance,
+        date_checkin, date_checkout, timestamp, date_booked, payment_type
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+    $stmt->bind_param("ssssdsssss",
+        $transactionId,
+        $reservee,
+        $facilityName,
+        $amountPaid,
+        $balance,
+        $dateCheckin,
+        $dateCheckout,
+        $timestamp,
+        $dateBooked,
+        $paymentTypeDB
     );
-    $stmt->execute();
-    $stmt->close();
 
-    echo json_encode([
-        'checkout_url' => $res['data']['attributes']['checkout_url'],
-        'transaction_id' => $res['data']['id']
-    ]);
+    if ($stmt->execute()) {
+        // Update facility status to 'Unavailable'
+        $update = $conn->prepare("UPDATE facility SET status = 'Unavailable' WHERE name = ?");
+        $update->bind_param("s", $facilityName);
+        if ($update->execute()) {
+            echo json_encode(['checkout_url' => $checkoutUrl]);
+        } else {
+            echo json_encode(['error' => 'Checkout created, but failed to update facility status']);
+        }
+        $update->close();
+    } else {
+        echo json_encode(['error' => 'DB insert failed: ' . $stmt->error]);
+    }
+
+    $stmt->close();
+    $conn->close();
 } else {
     echo json_encode(['error' => 'Invalid PayMongo response']);
 }
-
-$conn->close();

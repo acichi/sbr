@@ -11,7 +11,15 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 $username = isset($_SESSION['user']['username']) ? htmlspecialchars($_SESSION['user']['username']) : 'Admin';
 
 /* =======================
-   FETCH DATABASE COUNTS
+   HELPER: Check Column Exists
+   ======================= */
+function columnExists($conn, $table, $column) {
+    $result = $conn->query("SHOW COLUMNS FROM $table LIKE '$column'");
+    return ($result && $result->num_rows > 0);
+}
+
+/* =======================
+   FETCH COUNTS
    ======================= */
 // Total Reservations
 $resQuery = $conn->query("SELECT COUNT(*) AS count FROM reservations");
@@ -26,45 +34,93 @@ $salesQuery = $conn->query("SELECT IFNULL(SUM(amount), 0) AS total FROM reservat
 $totalSales = $salesQuery ? $salesQuery->fetch_assoc()['total'] : 0;
 
 /* =======================
+   FETCH SALES CHART DATA
+   ======================= */
+$chartLabels = [];
+$chartData = [];
+if (columnExists($conn, 'reservations', 'date_booked')) {
+    $query = $conn->query("
+        SELECT DATE_FORMAT(date_booked, '%b') as label, SUM(amount) as total 
+        FROM reservations 
+        GROUP BY MONTH(date_booked)
+        ORDER BY MONTH(date_booked)
+    ");
+    while ($row = $query->fetch_assoc()) {
+        $chartLabels[] = $row['label'];
+        $chartData[] = (float) $row['total'];
+    }
+}
+
+/* =======================
    FETCH ALL RESERVATIONS
-   ======================= 
-   Join with users to get email
-*/
+   ======================= */
+$dateBookedColumn = columnExists($conn, 'reservations', 'date_booked') ? 'r.date_booked' : 'NOW() AS date_booked';
 $allReservations = $conn->query("
-    SELECT r.reservee, u.email, r.facility_name, r.date_booked, r.date_start, r.date_end, 
+    SELECT r.reservee, u.email, r.facility_name, $dateBookedColumn, r.date_start, r.date_end, 
            r.payment_type, r.amount, r.status
     FROM reservations r
     LEFT JOIN users u ON u.username = r.reservee
-    ORDER BY r.date_booked DESC
+    ORDER BY r.date_start DESC
 ");
 
 /* =======================
    FETCH ALL ACCOUNTS
    ======================= */
+$dateAddedColumn = columnExists($conn, 'users', 'date_added') ? 'date_added' : 'NOW() AS date_added';
 $allAccounts = $conn->query("
-    SELECT username, fullname, email, role, created_at
+    SELECT username, fullname, email, role, $dateAddedColumn
     FROM users
-    ORDER BY created_at DESC
+    ORDER BY date_added DESC
 ");
 
+/* =======================
+   FETCH ALL FEEDBACKS
+   ======================= */
+$hasTimestamp = columnExists($conn, 'feedback', 'timestamp');
+$hasIsHidden = columnExists($conn, 'feedback', 'is_hidden');
+
+$timestampCol = $hasTimestamp ? 'timestamp' : 'NOW() AS timestamp';
+$isHiddenCol = $hasIsHidden ? 'is_hidden' : '0 AS is_hidden';
+
+$whereClause = $hasIsHidden ? "WHERE is_hidden = 0 OR is_hidden IS NULL" : ""; 
+
+$allFeedbacks = $conn->query("
+    SELECT id, fullname, facility_name, feedback, rate, $timestampCol, $isHiddenCol 
+    FROM feedback
+    $whereClause
+    ORDER BY timestamp DESC
+");
 ?>
 
-<!-- DASHBOARD HEADER -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shelton Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .hide-btn { background: #e08f5f; color: #fff; border: none; }
+    .unhide-btn { background: #7ab4a1; color: #fff; border: none; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
 <div class="head-title">
   <div class="left">
     <h1>Dashboard</h1>
     <ul class="breadcrumb">
-      <li>
-        <a class="active" href="#">
-          <?php echo "Welcome back, $username!"; ?>
-        </a>
-      </li>
+      <li><a class="active">Welcome back, <?php echo $username; ?>!</a></li>
     </ul>
   </div>
-  <a href="download_report.php" class="btn-download">
-    <i class='bx bxs-cloud-download'></i>
-    <span class="text">Download PDF</span>
-  </a>
 </div>
 
 <!-- STAT CARDS -->
@@ -72,14 +128,14 @@ $allAccounts = $conn->query("
   <li>
     <i class='bx bxs-calendar-check'></i>
     <span class="text">
-      <h3 id="reservationsCount"><?php echo $totalReservations; ?></h3>
+      <h3><?php echo $totalReservations; ?></h3>
       <p>Total Reservations</p>
     </span>
   </li>
   <li>
     <i class='bx bxs-group'></i>
     <span class="text">
-      <h3 id="guestsCount"><?php echo $totalGuests; ?></h3>
+      <h3><?php echo $totalGuests; ?></h3>
       <p>Total Guests</p>
     </span>
   </li>
@@ -92,71 +148,55 @@ $allAccounts = $conn->query("
   </li>
 </ul>
 
-<!-- TOP ROW: CHART + GALLERY UPLOAD -->
-<div class="table-data" style="display:flex; gap:24px; margin-bottom:24px; flex-wrap: wrap;">
+<!-- CHARTS: Sales & Feedback -->
+<div class="table-data" style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:24px;">
 
-  <!-- LEFT: Sales Chart -->
-  <div class="todo" style="flex: 1; min-width: 300px;">
-    <div id=reports class="head">
-      <h3>Sales Overview</h3>
-      <select id="timeRangeSelect" style="margin-left:auto; padding:5px 10px; border-radius:4px; border:1px solid #ccc; font-weight:600;">
+  <!-- Sales Chart -->
+  <div class="todo" style="flex:1; min-width:300px;">
+    <div class="head">
+      <h3 id="reports">Sales Overview</h3>
+      <select id="salesRangeSelect" style="margin-left:auto; padding:5px 10px; border:1px solid #ccc;">
         <option value="weekly">Weekly</option>
         <option value="monthly" selected>Monthly</option>
         <option value="yearly">Yearly</option>
       </select>
     </div>
-    <div id="totalSales" style="font-size:1.2rem; font-weight:700; margin:10px 0; color:#4bc0c0;">
+    <div id="totalSales" style="margin:10px 0; font-weight:bold; color:#4bc0c0;">
       Total Sales: $<?php echo number_format($totalSales,2); ?>
     </div>
     <canvas id="salesChart" width="400" height="300"></canvas>
   </div>
 
- <!-- RIGHT: Styled Gallery Upload Form -->
-<div class="upload-box">
-  <h3>Upload to Gallery</h3>
-
-  <form id="uploadForm" enctype="multipart/form-data">
-    <div class="mb-3">
-      <label for="description" class="form-label">Description</label>
-      <textarea class="form-control" id="description" name="description" required></textarea>
+  <!-- Feedback Chart -->
+  <div class="todo" style="flex:1; min-width:300px;">
+    <div class="head">
+      <h3>Feedback Overview</h3>
+      <select id="feedbackRangeSelect" style="margin-left:auto; padding:5px 10px; border:1px solid #ccc;">
+        <option value="weekly">Weekly</option>
+        <option value="monthly" selected>Monthly</option>
+        <option value="yearly">Yearly</option>
+      </select>
     </div>
-
-    <div class="mb-3">
-      <label class="form-label">Drag & Drop Files Below or Click to Browse</label>
-      <div id="drop-area" class="border border-2 border-primary rounded p-4 text-center bg-white" style="cursor:pointer">
-        <p>Drop files here or click to browse</p>
-        <input type="file" id="files" name="files[]" multiple hidden>
-      </div>
-      <div id="fileList" class="mt-3"></div>
-    </div>
-
-    <button type="submit" class="btn btn-success">Upload</button>
-  </form>
+    <canvas id="feedbackChart" width="400" height="300"></canvas>
+  </div>
 </div>
 
-<!-- BOTTOM: ALL RESERVATIONS TABLE -->
-<div class="table-data" id="Reservations">
-  <div class="order" style="width: 100%;">
+
+<!-- RESERVATIONS TABLE -->
+<div class="table-data">
+  <div class="order" style="width:100%; margin-bottom:20px;">
     <div class="head">
-      <h3>All Reservations</h3>
-      <input type="text" id="searchInput" placeholder="Search user..." style="padding:5px 10px; border-radius:4px; border:1px solid #ccc;">
-    </div>
-    <table id="reservationsTable">
+      <h3 id="reservation">All Reservations</h3></div>
+    <table>
       <thead>
         <tr>
-          <th>Reservee</th>
-          <th>Email</th>
-          <th>Facility</th>
-          <th>Date Booked</th>
-          <th>Start Date</th>
-          <th>End Date</th>
-          <th>Payment</th>
-          <th>Amount</th>
-          <th>Status</th>
+          <th>Reservee</th><th>Email</th><th>Facility</th><th>Date Booked</th>
+          <th>Start Date</th><th>End Date</th><th>Payment</th><th>Amount</th><th>Status</th>
         </tr>
       </thead>
       <tbody>
-        <?php while($row = $allReservations->fetch_assoc()) { ?>
+        <?php if($allReservations && $allReservations->num_rows>0) {
+          while($row=$allReservations->fetch_assoc()) { ?>
           <tr>
             <td><?php echo htmlspecialchars($row['reservee']); ?></td>
             <td><?php echo htmlspecialchars($row['email'] ?? 'N/A'); ?></td>
@@ -166,150 +206,124 @@ $allAccounts = $conn->query("
             <td><?php echo date('m-d-Y H:i', strtotime($row['date_end'])); ?></td>
             <td><?php echo htmlspecialchars($row['payment_type']); ?></td>
             <td>$<?php echo number_format($row['amount'], 2); ?></td>
+            <td><?php echo ucfirst($row['status']); ?></td>
+          </tr>
+        <?php } } else { ?>
+          <tr><td colspan="9">No reservations found.</td></tr>
+        <?php } ?>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ACCOUNTS TABLE -->
+  <div class="order" style="width:100%; margin-bottom:20px;">
+    <div class="head">
+      <h3 id="accounts">All Accounts</h3></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th><th>Full Name</th><th>Email</th><th>Role</th><th>Date Added</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if($allAccounts && $allAccounts->num_rows>0) {
+          while($row=$allAccounts->fetch_assoc()) { ?>
+          <tr>
+            <td><?php echo htmlspecialchars($row['username']); ?></td>
+            <td><?php echo htmlspecialchars($row['fullname']); ?></td>
+            <td><?php echo htmlspecialchars($row['email']); ?></td>
+            <td><?php echo ucfirst($row['role']); ?></td>
+            <td><?php echo date('m-d-Y', strtotime($row['date_added'])); ?></td>
+          </tr>
+        <?php } } else { ?>
+          <tr><td colspan="5">No accounts found.</td></tr>
+        <?php } ?>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FEEDBACK MANAGEMENT -->
+  <div class="order" style="width:100%;">
+    <div class="head">
+      <h3 id="feedback">Manage Feedbacks</h3></div>
+    <table>
+      <thead>
+        <tr>
+          <th>User</th><th>Facility</th><th>Rating</th><th>Comment</th><th>Date</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if($allFeedbacks && $allFeedbacks->num_rows>0) {
+          while($row=$allFeedbacks->fetch_assoc()) { ?>
+          <tr>
+            <td><?php echo htmlspecialchars($row['fullname']); ?></td>
+            <td><?php echo htmlspecialchars($row['facility_name']); ?></td>
+            <td><?php for($i=0; $i<$row['rate']; $i++) echo "⭐"; ?></td>
+            <td><?php echo htmlspecialchars($row['feedback']); ?></td>
+            <td><?php echo date('m-d-Y', strtotime($row['timestamp'])); ?></td>
             <td>
-              <span class="status <?php echo strtolower($row['status']); ?>">
-                <?php echo ucfirst($row['status']); ?>
-              </span>
+              <?php if($row['is_hidden'] == 0) { ?>
+                <button class="btn hide-btn">Hide</button>
+              <?php } else { ?>
+                <button class="btn unhide-btn">Unhide</button>
+              <?php } ?>
             </td>
           </tr>
+        <?php } } else { ?>
+          <tr><td colspan="6">No feedbacks found.</td></tr>
         <?php } ?>
       </tbody>
     </table>
   </div>
 </div>
 
-
-
-<!-- SCRIPTS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="js/upload_script.js"></script>
 <script>
-// Animate counts
-document.querySelectorAll('.box-info h3').forEach(el => {
-  let target = parseFloat(el.textContent.replace(/[^0-9.]/g, ''));
-  let start = 0;
-  let increment = target / 50;
-  let isMoney = el.textContent.includes('$');
-  let update = setInterval(() => {
-    start += increment;
-    if (start >= target) {
-      start = target;
-      clearInterval(update);
-    }
-    el.textContent = isMoney ? `$${start.toFixed(0)}` : Math.floor(start);
-  }, 30);
+// ----- Sales Chart -----
+const salesCtx = document.getElementById('salesChart').getContext('2d');
+new Chart(salesCtx, {
+    type: 'line',
+    data: {
+        labels: <?php echo json_encode($chartLabels); ?>,
+        datasets: [{
+            label: 'Total Sales',
+            data: <?php echo json_encode($chartData); ?>,
+            borderColor: '#4bc0c0',
+            backgroundColor: 'rgba(75,192,192,0.2)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointBackgroundColor: '#4bc0c0'
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false }}, scales: { y: { beginAtZero: true }} }
 });
 
-// Search filter
-document.getElementById('searchInput').addEventListener('keyup', function() {
-  let filter = this.value.toLowerCase();
-  document.querySelectorAll('#reservationsTable tbody tr').forEach(row => {
-    let user = row.cells[0].innerText.toLowerCase();
-    row.style.display = user.includes(filter) ? '' : 'none';
-  });
-});
+// ----- Feedback Chart -----
+const feedbackCtx = document.getElementById('feedbackChart').getContext('2d');
+let feedbackChart = null;
 
-// Chart.js Sales Chart
-const ctx = document.getElementById('salesChart').getContext('2d');
-let salesChart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: ['Jan','Feb','Mar','Apr','May','Jun'],
-    datasets: [{
-      label: 'Sales',
-      data: [500,1000,750,1300,900,1250], // Placeholder
-      backgroundColor: 'rgba(75,192,192,0.2)',
-      borderColor: '#4bc0c0',
-      borderWidth: 2,
-      fill: true,
-      tension: 0.3,
-      pointBackgroundColor: '#4bc0c0'
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: { legend: { display: false } },
-    scales: { y: { beginAtZero: true } }
-  }
-});
-
-// Dropdown Update
-document.getElementById('timeRangeSelect').addEventListener('change', function(){
-  let data;
-  if(this.value === 'weekly') data = [150,200,250,220,300,280];
-  if(this.value === 'monthly') data = [500,1000,750,1300,900,1250];
-  if(this.value === 'yearly') data = [4000,4200,4100,5000,4500,4800];
-  salesChart.data.datasets[0].data = data;
-  salesChart.update();
-});
-
-// Gallery Upload JS
-document.addEventListener("DOMContentLoaded", () => {
-  const dropArea = document.getElementById("drop-area");
-  const fileInput = document.getElementById("files");
-  const fileList = document.getElementById("fileList");
-  const uploadForm = document.getElementById("uploadForm");
-
-  dropArea.addEventListener("click", () => fileInput.click());
-
-  ["dragenter", "dragover"].forEach(event => {
-    dropArea.addEventListener(event, e => {
-      e.preventDefault();
-      dropArea.classList.add("bg-info", "text-white");
+function loadFeedbackChart(range = 'monthly') {
+    fetch('fetch_feedback_chart.php?range=' + range)
+    .then(res => res.json())
+    .then(data => {
+        if (feedbackChart) feedbackChart.destroy();
+        feedbackChart = new Chart(feedbackCtx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Feedback Count',
+                    data: data.counts,
+                    backgroundColor: '#e08f5f',
+                    borderRadius: 6
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false }}, scales: { y: { beginAtZero: true }} }
+        });
     });
-  });
-
-  ["dragleave", "drop"].forEach(event => {
-    dropArea.addEventListener(event, e => {
-      e.preventDefault();
-      dropArea.classList.remove("bg-info", "text-white");
-    });
-  });
-
-  dropArea.addEventListener("drop", e => {
-    fileInput.files = e.dataTransfer.files;
-    displayFileList();
-  });
-
-  fileInput.addEventListener("change", displayFileList);
-
-  function displayFileList() {
-    const files = fileInput.files;
-    fileList.innerHTML = "";
-    Array.from(files).forEach(file => {
-      const item = document.createElement("div");
-      item.textContent = file.name;
-      fileList.appendChild(item);
-    });
-  }
-
-  uploadForm.addEventListener("submit", async e => {
-    e.preventDefault();
-
-    const formData = new FormData(uploadForm);
-    for (const file of fileInput.files) {
-      formData.append("files[]", file);
-    }
-
-    try {
-      const response = await fetch("upload.php", {
-        method: "POST",
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        Swal.fire("Success!", result.message, "success");
-        uploadForm.reset();
-        fileList.innerHTML = "";
-      } else {
-        Swal.fire("Error!", result.message, "error");
-      }
-    } catch (error) {
-      Swal.fire("Oops!", "Something went wrong.", "error");
-    }
-  });
-});
+}
+loadFeedbackChart('monthly');
+document.getElementById('feedbackRangeSelect').addEventListener('change', e => loadFeedbackChart(e.target.value));
 </script>
+</body>
+</html>
