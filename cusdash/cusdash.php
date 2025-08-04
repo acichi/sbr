@@ -376,16 +376,20 @@ $conn->close();
               <tr>
                 <td><?= htmlspecialchars($feedback['facility_name']) ?></td>
                 <td><?= htmlspecialchars($feedback['feedback']) ?></td>
-                <td><?= htmlspecialchars($feedback['rating']) ?></td>
+                <td>
+                    <?php for($i = 1; $i <= $feedback['rate']; $i++): ?>
+                        <i class='bx bxs-star text-warning'></i>
+                    <?php endfor; ?>
+                </td>
                 <td><?= htmlspecialchars(date('Y-m-d', strtotime($feedback['timestamp']))) ?></td>
               </tr>
               <?php endforeach; ?>
             </tbody>
           </table>
         </div>
-      <?php  else { ?>
+      <?php else: ?>
         <div class="alert alert-info">No feedback found.</div>
-      <?php } ?>
+      <?php endif; ?>
     </div>
 
     <!-- Reviews Section -->
