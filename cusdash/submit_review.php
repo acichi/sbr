@@ -1,5 +1,4 @@
 <?php
-<?php
 require '../properties/connection.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

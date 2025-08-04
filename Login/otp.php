@@ -98,10 +98,19 @@
         <input type="text" maxlength="1" class="otp-input" required>
         <input type="text" maxlength="1" class="otp-input" required>
       </div>
-      <!-- Hidden input to hold the combined OTP -->
       <input type="hidden" name="otp" id="otp">
       <button type="submit" class="btn btn-theme w-100 py-2">Verify</button>
     </form>
+
+    <!-- Resend OTP -->
+    <div class="mt-3">
+      <button type="button" class="btn btn-link text-decoration-none" id="resendBtn" onclick="resendOTP()" disabled>
+        Resend OTP <span id="countdown">(30s)</span>
+      </button>
+      <form method="POST" action="resend_otp.php" id="resendForm" style="display: none;">
+        <input type="hidden" name="resend" value="1">
+      </form>
+    </div>
   </div>
 
   <script>
@@ -124,6 +133,26 @@
       inputs.forEach(input => otpValue += input.value);
       otpField.value = otpValue;
     });
+
+    // Countdown timer
+    let countdown = 30;
+    const resendBtn = document.getElementById('resendBtn');
+    const countdownSpan = document.getElementById('countdown');
+
+    const timer = setInterval(() => {
+      countdown--;
+      countdownSpan.textContent = `(${countdown}s)`;
+      if (countdown <= 0) {
+        clearInterval(timer);
+        resendBtn.disabled = false;
+        countdownSpan.textContent = '';
+      }
+    }, 1000);
+
+    // Resend OTP function
+    function resendOTP() {
+      document.getElementById('resendForm').submit();
+    }
   </script>
 
 </body>

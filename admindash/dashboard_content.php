@@ -157,8 +157,8 @@ $allFeedbacks = $conn->query("
 <!-- RESERVATIONS TABLE -->
 <div class="table-data">
   <div class="order" style="width:100%; margin-bottom:20px;">
-    <div class="head"><h3 >All Reservations</h3></div>
-    <table id="reservationsTable" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
+    <div class="head"><h3 id="reservations" >All Reservations</h3></div>
+    <table class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
       <thead>
         <tr>
           <th>Reservee</th><th>Email</th><th>Facility</th><th>Date Booked</th>

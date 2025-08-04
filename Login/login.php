@@ -9,7 +9,8 @@
   <!-- Fonts & Core Styles -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-     <link rel="icon" href="pics/logo2.png" type="image/png">
+  <link rel="icon" href="pics/logo2.png" type="image/png">
+
   <style>
     body {
       font-family: 'Roboto', sans-serif;
@@ -66,7 +67,6 @@
       background-color: #65a291;
     }
 
-    /* Back to Home Button Styling */
     .back-home-btn {
       position: fixed;
       top: 20px;
@@ -89,11 +89,25 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       color: #fff;
     }
+
+    /* SweetAlert Custom Style */
+    .swal2-popup {
+      font-family: 'Playfair Display', serif !important;
+      border: 2px solid #7ab4a1;
+      background: #fffdfc;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    .swal2-title {
+      font-size: 24px !important;
+    }
+    .swal2-confirm {
+      background-color: #7ab4a1 !important;
+      border: none !important;
+      font-family: 'Playfair Display', serif;
+    }
   </style>
 </head>
 <body>
-
-  <!-- Back to Home Button -->
   <a href="../index.php" class="back-home-btn">← Back to Home</a>
 
   <div class="container d-flex justify-content-center align-items-center min-vh-100">
@@ -116,7 +130,13 @@
             <input type="password" name="password" id="password" class="form-control" required>
             <span id="toggle-password" class="position-absolute top-50 end-0 translate-middle-y pe-3" style="cursor: pointer;">👁️</span>
           </div>
-          <button type="submit" class="btn btn-warning w-100">Login</button>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="agreeLogin" disabled>
+            <label class="form-check-label" for="agreeLogin">
+              I agree to the <a href="#" id="viewTerms">Terms and Conditions</a>
+            </label>
+          </div>
+          <button type="submit" class="btn btn-warning w-100" id="loginBtn">Login</button>
           <div class="text-center mt-3">
             <p>Don't have an account? <a href="#" id="show-register">Register here</a></p>
           </div>
@@ -171,7 +191,10 @@
   </div>
 
   <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <script>
     $("#toggle-password").click(function () {
       const input = $("#password");
@@ -186,6 +209,80 @@
     $("#show-login").click(function () {
       $("#register-form-wrapper").addClass("d-none");
       $("#login-form-wrapper").removeClass("d-none");
+    });
+
+    // SweetAlert Terms Modal Trigger
+    document.getElementById('viewTerms').addEventListener('click', function (e) {
+      e.preventDefault();
+
+      Swal.fire({
+        title: 'Terms & Conditions',
+        width: '60%',
+        html: `
+          <div style="text-align: left; font-family: 'Playfair Display', serif; font-size: 16px;">
+           <div style="text-align: left; font-family: 'Playfair Display', serif; font-size: 16px;">
+  <h6>Shelton Beach Resort – Bacolod, Negros Occidental</h6>
+  <p>By signing in or creating an account, you agree to the following:</p>
+  <hr>
+  <strong>1. Account Usage</strong>
+  <ul>
+    <li>Provide accurate personal information when registering.</li>
+    <li>Do not share your login credentials with others.</li>
+    <li>We may suspend accounts that violate our rules.</li>
+  </ul>
+  <strong>2. Guest Conduct</strong>
+  <ul>
+    <li>Respect resort staff, guests, and property at all times.</li>
+    <li>Guests are responsible for any damages caused.</li>
+    <li>We reserve the right to deny service for misconduct.</li>
+  </ul>
+  <strong>3. Privacy</strong>
+  <ul>
+    <li>Your data is used for booking and communication only.</li>
+    <li>We do not share your personal info with third parties.</li>
+  </ul>
+  <strong>4. Availability & Liability</strong>
+  <ul>
+    <li>Access to facilities is subject to availability.</li>
+    <li>We are not liable for system issues or disruptions.</li>
+  </ul>
+</div>
+
+        `,
+        background: '#fffaf5',
+        color: '#3b3a36',
+        confirmButtonText: 'I Agree',
+        backdrop: 'rgba(122, 180, 161, 0.3)',
+        customClass: {
+          popup: 'rounded-4 shadow',
+          title: 'fw-bold',
+          confirmButton: 'btn btn-success px-4 mt-3',
+        },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const checkbox = document.getElementById('agreeLogin');
+          checkbox.checked = true;
+          checkbox.disabled = false;
+        }
+      });
+    });
+
+    // Block form submission if T&C not checked
+    $("form").on("submit", function (e) {
+      if (!$("#agreeLogin").is(":checked")) {
+        e.preventDefault();
+        Swal.fire({
+          icon: 'warning',
+          title: 'Agreement Required',
+          text: 'You must agree to the Terms and Conditions before continuing.',
+          confirmButtonColor: '#e08f5f',
+          customClass: {
+            popup: 'rounded-4 shadow',
+            title: 'fw-bold',
+            confirmButton: 'btn btn-warning px-4 mt-3',
+          }
+        });
+      }
     });
   </script>
 </body>

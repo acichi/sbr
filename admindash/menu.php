@@ -16,7 +16,7 @@
       </a>
     </li>
       <li>
-      <a href="#reservationsTable" id="reservation-link">
+      <a href="#reservations" id="reservation-link">
         <i class='bx bxs-shopping-bag-alt'></i>
         <span class="text">Reservations</span>
       </a>
