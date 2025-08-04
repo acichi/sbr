@@ -6,8 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
       data.forEach(facility => {
         const { id, name, pin_x, pin_y, status, image, details, price } = facility;
         const normalizedStatus = status.trim().toLowerCase();
+        // Add blue status for future reservations
         const color = normalizedStatus === 'available' ? 'green' :
-                      normalizedStatus === 'pending' ? 'yellow' : 'red';
+                      normalizedStatus === 'pending' ? 'yellow' :
+                      normalizedStatus === 'blue' ? 'blue' : 'red';
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('cx', pin_x);
         circle.setAttribute('cy', pin_y);
@@ -32,7 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function showFacilityModal(facility) {
-  const { name, details, status, image, price } = facility;
+  const { name, details, status, image, price, date_checkin } = facility;
+  let countdownHtml = '';
+  if (status === 'blue' && date_checkin) {
+    countdownHtml = `<div id="countdown" class="mb-2 text-primary fw-bold"></div>`;
+  }
   const modalContent = `
     <div class="modal fade" id="facilityModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
@@ -44,6 +50,7 @@ function showFacilityModal(facility) {
           <div class="modal-body">
             <img src="../admindash/${image}" class="img-fluid mb-3" alt="${name}">
             <p><strong>Status:</strong> ${status}</p>
+            ${countdownHtml}
             <p><strong>Price:</strong> ₱${price} per day</p>
             <p>${details}</p>
             <div class="text-end mt-4">
@@ -92,100 +99,131 @@ function showFacilityModal(facility) {
   const oldModal = document.getElementById('facilityModal');
   if (oldModal) oldModal.remove();
   document.body.insertAdjacentHTML('beforeend', modalContent);
-  const modal = new bootstrap.Modal(document.getElementById('facilityModal'));
-  modal.show();
+  const modalEl = document.getElementById('facilityModal');
+  const modal = new bootstrap.Modal(modalEl);
 
-  setTimeout(() => {
-    const form = document.getElementById('reservationForm');
-    const amountField = document.getElementById('amount');
-    const startField = document.getElementById('date_start');
-    const endField = document.getElementById('date_end');
-
-    // Helper to recalculate total
-    function recalculateAmount() {
-      const start = new Date(startField.value);
-      const end = new Date(endField.value);
-      if (start && end && end > start) {
-        const msPerDay = 1000 * 60 * 60 * 24;
-        const days = Math.ceil((end - start) / msPerDay);
-        const total = days * price;
-        amountField.value = total.toFixed(2);
+  // Countdown logic
+  if (status === 'blue' && date_checkin) {
+    const countdownEl = document.getElementById('countdown');
+    function updateCountdown() {
+      const now = new Date();
+      const target = new Date(date_checkin.replace(' ', 'T'));
+      const diff = target - now;
+      if (diff > 0) {
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        countdownEl.textContent = `Available for ${hours}h ${minutes}m ${seconds}s`;
       } else {
-        amountField.value = '';
+        countdownEl.textContent = 'Facility will be unavailable soon.';
+        clearInterval(timer);
       }
     }
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    modalEl.addEventListener('hidden.bs.modal', () => clearInterval(timer));
+  }
 
-    // Trigger calculation on input
-    startField.addEventListener('input', recalculateAmount);
-    endField.addEventListener('input', recalculateAmount);
+  // Attach event listeners immediately after modal is inserted
+  const form = document.getElementById('reservationForm');
+  const amountField = document.getElementById('amount');
+  const startField = document.getElementById('date_start');
+  const endField = document.getElementById('date_end');
+  const reserveBtn = document.getElementById('reserveBtn');
 
-    document.getElementById('reserveBtn')?.addEventListener('click', () => {
-      form.classList.remove('d-none');
-    });
+  // Set minimum date/time to now for both fields
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  const localNow = new Date(now.getTime() - offset * 60 * 1000);
+  const minDateTime = localNow.toISOString().slice(0, 16); // 'YYYY-MM-DDTHH:MM'
+  startField.min = minDateTime;
+  endField.min = minDateTime;
 
-    form?.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      const paymentType = formData.get('payment_type');
-      const amount = parseFloat(formData.get('amount'));
+  // Helper to recalculate total
+  function recalculateAmount() {
+    const start = new Date(startField.value);
+    const end = new Date(endField.value);
+    if (start && end && end > start) {
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const days = Math.ceil((end - start) / msPerDay);
+      const total = days * price;
+      amountField.value = total.toFixed(2);
+    } else {
+      amountField.value = '';
+    }
+  }
 
-      const payload = {
-        reservee: formData.get('reservee'),
-        facility_name: formData.get('facility_name'),
-        date_start: formData.get('date_start'),
-        date_end: formData.get('date_end'),
-        payment_type: paymentType,
-        amount: amount,
-        date_booked: new Date().toISOString().slice(0, 19).replace('T', ' '),
-        status: 'Pending'
-      };
+  startField.addEventListener('input', recalculateAmount);
+  endField.addEventListener('input', recalculateAmount);
 
-      if (paymentType === 'Cash') {
-        fetch('submit_reservation.php', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-        .then(res => res.text())
-        .then(response => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Reserved Successfully!',
-            text: 'Your reservation has been recorded.',
-          });
-          modal.hide();
-        })
-        .catch(error => {
-          Swal.fire({
-            icon: 'error',
-            title: 'Reservation Failed',
-            text: 'There was a problem saving your reservation.',
-          });
-          console.error(error);
+  reserveBtn?.addEventListener('click', () => {
+    form.classList.remove('d-none');
+  });
+
+  form?.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const paymentType = formData.get('payment_type');
+    const amount = parseFloat(formData.get('amount'));
+
+    const payload = {
+      reservee: formData.get('reservee'),
+      facility_name: formData.get('facility_name'),
+      date_start: formData.get('date_start'),
+      date_end: formData.get('date_end'),
+      payment_type: paymentType,
+      amount: amount,
+      date_booked: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      status: 'Pending'
+    };
+
+    if (paymentType === 'Cash') {
+      fetch('submit_reservation.php', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => res.text())
+      .then(response => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Reserved Successfully!',
+          text: 'Your reservation has been recorded.',
         });
-      } else {
-        fetch('create_payment.php', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-        .then(res => res.json())
-        .then(response => {
-          if (response.checkout_url) {
-            window.location.href = response.checkout_url;
-          } else {
-            Swal.fire('Error', 'Failed to initiate payment.', 'error');
-          }
-        })
-        .catch(error => {
-          Swal.fire('Error', 'Could not connect to PayMongo.', 'error');
-          console.error(error);
+        modal.hide();
+      })
+      .catch(error => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Reservation Failed',
+          text: 'There was a problem saving your reservation.',
         });
-      }
-    });
-  }, 300);
+        console.error(error);
+      });
+    } else {
+      fetch('create_payment.php', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => res.json())
+      .then(response => {
+        if (response.checkout_url) {
+          window.location.href = response.checkout_url;
+        } else {
+          Swal.fire('Error', 'Failed to initiate payment.', 'error');
+        }
+      })
+      .catch(error => {
+        Swal.fire('Error', 'Could not connect to PayMongo.', 'error');
+        console.error(error);
+      });
+    }
+  });
+
+  modal.show();
 }
