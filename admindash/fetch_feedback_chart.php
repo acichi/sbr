@@ -3,37 +3,40 @@ require '../properties/connection.php';
 
 $range = $_GET['range'] ?? 'monthly';
 
-switch($range){
-    case 'weekly':
-        $groupBy = "WEEK(timestamp)";
-        $labelFormat = "%b %d";
-        break;
-    case 'yearly':
-        $groupBy = "YEAR(timestamp)";
-        $labelFormat = "%Y";
-        break;
-    default: // monthly
-        $groupBy = "MONTH(timestamp)";
-        $labelFormat = "%b";
-        break;
-}
-
-$query = $conn->query("
-    SELECT DATE_FORMAT(timestamp, '$labelFormat') as label, COUNT(*) as total 
-    FROM feedback 
-    WHERE is_hidden = 0 OR is_hidden IS NULL
-    GROUP BY $groupBy
-    ORDER BY MIN(timestamp)
-");
-
 $labels = [];
 $counts = [];
-while($row = $query->fetch_assoc()){
+
+if ($range === 'weekly') {
+    $query = $conn->query("
+        SELECT DATE_FORMAT(timestamp, '%a') as label, COUNT(*) as total
+        FROM feedback
+        WHERE timestamp >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        GROUP BY DATE(timestamp)
+        ORDER BY DATE(timestamp)
+    ");
+} elseif ($range === 'yearly') {
+    $query = $conn->query("
+        SELECT YEAR(timestamp) as label, COUNT(*) as total
+        FROM feedback
+        GROUP BY YEAR(timestamp)
+        ORDER BY YEAR(timestamp)
+    ");
+} else {
+    $query = $conn->query("
+        SELECT DATE_FORMAT(timestamp, '%b') as label, COUNT(*) as total
+        FROM feedback
+        GROUP BY MONTH(timestamp)
+        ORDER BY MONTH(timestamp)
+    ");
+}
+
+while ($row = $query->fetch_assoc()) {
     $labels[] = $row['label'];
-    $counts[] = (int)$row['total'];
+    $counts[] = (int) $row['total'];
 }
 
 echo json_encode([
-    "labels" => $labels,
-    "counts" => $counts
+    'labels' => $labels,
+    'counts' => $counts
 ]);
+?>

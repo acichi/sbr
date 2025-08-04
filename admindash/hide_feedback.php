@@ -1,18 +1,32 @@
 <?php
+session_start();
 require '../properties/connection.php';
 
-if (!isset($_GET['id']) || !isset($_GET['action'])) {
-    header("Location: admindash.php");
+// Ensure user is admin
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit;
 }
 
-$id = intval($_GET['id']);
-$action = $_GET['action'];
+$id = $_GET['id'] ?? null;
+$action = $_GET['action'] ?? null;
 
-$isHidden = ($action === 'hide') ? 1 : 0;
+if (!$id || !in_array($action, ['hide', 'unhide'])) {
+    echo json_encode(['success' => false, 'message' => 'Invalid request']);
+    exit;
+}
 
-$conn->query("UPDATE feedback SET is_hidden = $isHidden WHERE id = $id");
+$is_hidden = ($action === 'hide') ? 1 : 0;
 
-header("Location: admindash.php#feedback");
-exit;
+$stmt = $conn->prepare("UPDATE feedback SET is_hidden = ? WHERE id = ?");
+$stmt->bind_param('ii', $is_hidden, $id);
+
+if ($stmt->execute()) {
+    echo json_encode(['success' => true, 'message' => 'Feedback updated successfully']);
+} else {
+    echo json_encode(['success' => false, 'message' => 'Failed to update feedback']);
+}
+
+$stmt->close();
+$conn->close();
 ?>

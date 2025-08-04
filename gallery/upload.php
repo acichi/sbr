@@ -1,40 +1,67 @@
 <?php
 require "../properties/connection.php";
 
-$response = ["success" => false, "message" => ""];
-
-$uploadDir = "uploads/";
+// Set upload folder
+$uploadDir = "../uploads/gallery/";
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0777, true);
 }
 
-$description = $_POST['description'] ?? '';
-$date_now = date("Y-m-d H:i:s");
+// Validate description
+if (!isset($_POST['description']) || empty(trim($_POST['description']))) {
+    http_response_code(400);
+    echo "Description is required.";
+    exit;
+}
+$description = trim($_POST['description']);
 
-if (empty($_FILES['files']['name'][0])) {
-    $response["message"] = "No files uploaded.";
-    echo json_encode($response);
+// Validate files
+if (!isset($_FILES['files']) || empty($_FILES['files']['name'][0])) {
+    http_response_code(400);
+    echo "No files selected.";
     exit;
 }
 
-$files = $_FILES['files'];
+$successCount = 0;
+$errorCount = 0;
 
-for ($i = 0; $i < count($files['name']); $i++) {
-    $filename = basename($files['name'][$i]);
-    $targetPath = $uploadDir . time() . "_" . $filename;
-    $relativePath = "uploads/" . time() . "_" . $filename;
+foreach ($_FILES['files']['tmp_name'] as $key => $tmpName) {
+    $fileName = basename($_FILES['files']['name'][$key]);
+    $targetPath = $uploadDir . $fileName;
 
-    if (move_uploaded_file($files['tmp_name'][$i], $targetPath)) {
-        $stmt = $conn->prepare("INSERT INTO gallery (description, location, date_added, date_updated) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $description, $relativePath, $date_now, $date_now);
-        $stmt->execute();
+    // Validate file type
+    $allowedExt = ['jpg','jpeg','png','gif','webp'];
+    $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    if (!in_array($ext, $allowedExt)) {
+        $errorCount++;
+        continue;
+    }
+
+    // Move file
+    if (move_uploaded_file($tmpName, $targetPath)) {
+        // Save path in DB (relative to index)
+        $location = "uploads/gallery/" . $fileName;
+
+        $stmt = $conn->prepare("INSERT INTO gallery (description, location, date_added) VALUES (?, ?, NOW())");
+        $stmt->bind_param("ss", $description, $location);
+
+        if ($stmt->execute()) {
+            $successCount++;
+        } else {
+            $errorCount++;
+        }
+
+        $stmt->close();
     } else {
-        $response["message"] = "Failed to upload file: " . $filename;
-        echo json_encode($response);
-        exit;
+        $errorCount++;
     }
 }
 
-$response["success"] = true;
-$response["message"] = "Files uploaded successfully!";
-echo json_encode($response);
+// Return response
+if ($successCount > 0) {
+    echo "$successCount file(s) uploaded successfully. $errorCount failed.";
+} else {
+    http_response_code(500);
+    echo "Upload failed.";
+}
+?>

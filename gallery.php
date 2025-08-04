@@ -1,5 +1,5 @@
 <?php
-// gallery.php
+require "properties/connection.php";
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -11,15 +11,96 @@
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap & CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- CSS Libraries -->
-    <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/animate.css">
     <link rel="stylesheet" href="css/owl.carousel.min.css">
     <link rel="stylesheet" href="css/aos.css">
     <link rel="stylesheet" href="css/fancybox.min.css">
     <link rel="stylesheet" href="css/style.css">
+
     <link rel="icon" href="pics/logo2.png" type="image/png">
+
+    <style>
+      .gallery-flex {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+      }
+
+      .gallery-item {
+        position: relative;
+        flex: 1 1 calc(33.333% - 20px);
+        max-width: calc(33.333% - 20px);
+        overflow: hidden;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      }
+
+      .gallery-item img {
+        width: 100%;
+        height: 240px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+        display: block;
+      }
+
+      .gallery-item:hover img {
+        transform: scale(1.1);
+      }
+
+      /* Hover overlay with caption */
+      .gallery-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        opacity: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 500;
+        text-align: center;
+        padding: 10px;
+        transition: opacity 0.3s ease;
+      }
+
+      .gallery-item:hover .gallery-overlay {
+        opacity: 1;
+      }
+
+      /* Tablet */
+      @media (max-width: 991px) {
+        .gallery-item {
+          flex: 1 1 calc(50% - 20px);
+          max-width: calc(50% - 20px);
+        }
+      }
+
+      /* Mobile */
+      @media (max-width: 600px) {
+        .gallery-item {
+          flex: 1 1 100%;
+          max-width: 100%;
+        }
+      }
+
+      /* Empty state */
+      .empty-gallery {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+      }
+      .empty-gallery i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        display: block;
+        color: #7ab4a1;
+      }
+    </style>
   </head>
 
   <body>
@@ -53,9 +134,33 @@
             <p class="text-muted">Capture Yours. Visit Us Today!</p>
           </div>
         </div>
-        <div class="row">
-          <?php include("gallery/gallery_view.php");?>
-        </div>
+
+        <?php
+        $query = $conn->query("SELECT * FROM gallery ORDER BY date_added DESC");
+
+        if (!$query || $query->num_rows == 0) {
+          echo '
+            <div class="empty-gallery">
+              <i class="fas fa-camera"></i>
+              <p>No photos yet. Upload from admin dashboard.</p>
+            </div>';
+        } else {
+          echo '<div class="gallery-flex">';
+          while ($row = $query->fetch_assoc()) {
+            $imagePath = htmlspecialchars($row['location']);
+            $description = htmlspecialchars($row['description']);
+            echo '
+              <div class="gallery-item">
+                <a href="'.$imagePath.'" data-fancybox="gallery" data-caption="'.$description.'">
+                  <img src="'.$imagePath.'" alt="'.$description.'" loading="lazy">
+                  <div class="gallery-overlay">'.$description.'</div>
+                </a>
+              </div>
+            ';
+          }
+          echo '</div>';
+        }
+        ?>
       </div>
     </section>
 
@@ -77,6 +182,7 @@
     <?php include 'footer.php'; ?>
 
     <!-- JS Libraries -->
+    <script src="https://kit.fontawesome.com/yourkitid.js" crossorigin="anonymous"></script>
     <script src="js/jquery-3.3.1.min.js"></script>
     <script src="js/jquery-migrate-3.0.1.min.js"></script>
     <script src="js/popper.min.js"></script>
@@ -90,9 +196,10 @@
     <script>
       $(document).ready(function() {
         $('[data-fancybox="gallery"]').fancybox({
-          buttons: [
-            "zoom", "slideShow", "thumbs", "close"
-          ]
+          buttons: ["zoom", "slideShow", "thumbs", "close"],
+          caption: function(instance, item) {
+            return $(this).data('caption') || '';
+          }
         });
       });
     </script>

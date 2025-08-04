@@ -16,13 +16,13 @@
       </a>
     </li>
       <li>
-      <a href="#reservation" id="reservation-link">
+      <a href="#reservationsTable" id="reservation-link">
         <i class='bx bxs-shopping-bag-alt'></i>
         <span class="text">Reservations</span>
       </a>
     </li>
         <li>
-      <a href="#accounts">
+      <a href="#accountsTable">
         <i class='bx bxs-group'></i>
         <span class="text">Accounts</span>
       </a>
@@ -48,7 +48,7 @@
       </a>
     </li>
     <li>
-      <a href="book_walkins.php">
+      <a href="../cusdash/map_settings.php">
         <i class='bx bxs-calendar-check'></i>
         <span class="text">Book Walk-ins</span>
       </a>

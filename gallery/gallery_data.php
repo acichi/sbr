@@ -1,32 +1,55 @@
 <?php
 require "../properties/connection.php";
 
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 6;
-$offset = ($page - 1) * $limit;
-
-$totalQuery = $conn->query("SELECT COUNT(*) AS total FROM gallery");
-$totalRow = $totalQuery->fetch_assoc();
-$totalItems = $totalRow['total'];
-$totalPages = ceil($totalItems / $limit);
-
-$query = $conn->prepare("SELECT * FROM gallery ORDER BY date_added DESC LIMIT ?, ?");
-$query->bind_param("ii", $offset, $limit);
-$query->execute();
-$result = $query->get_result();
-
-$items = [];
-while ($row = $result->fetch_assoc()) {
-  $items[] = [
-    "id" => $row['id'],
-    "description" => htmlspecialchars($row['description']),
-    "location" => htmlspecialchars($row['location']),
-    "date_added" => date("M d, Y", strtotime($row['date_added']))
-  ];
+// Set upload directory
+$uploadDir = "../uploads/gallery/";
+if (!is_dir($uploadDir)) {
+    mkdir($uploadDir, 0777, true);
 }
 
-echo json_encode([
-  "items" => $items,
-  "totalPages" => $totalPages,
-  "currentPage" => $page
-]);
+// Validate description
+if (!isset($_POST['description']) || empty(trim($_POST['description']))) {
+    http_response_code(400);
+    echo "Description is required.";
+    exit;
+}
+
+$description = trim($_POST['description']);
+
+// Validate files
+if (empty($_FILES['files']['name'][0])) {
+    http_response_code(400);
+    echo "No files selected.";
+    exit;
+}
+
+$responses = [];
+foreach ($_FILES['files']['tmp_name'] as $key => $tmpName) {
+    $fileName = basename($_FILES['files']['name'][$key]);
+    $targetPath = $uploadDir . $fileName;
+
+    // Check for allowed file types (basic)
+    $allowedTypes = ['jpg','jpeg','png','gif','webp'];
+    $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    if (!in_array($ext, $allowedTypes)) {
+        $responses[] = "$fileName skipped (invalid type)";
+        continue;
+    }
+
+    // Move the file
+    if (move_uploaded_file($tmpName, $targetPath)) {
+        // Insert into database
+        $location = "uploads/gallery/" . $fileName; // relative path for DB
+        $stmt = $conn->prepare("INSERT INTO gallery (description, location, date_added) VALUES (?, ?, NOW())");
+        $stmt->bind_param("ss", $description, $location);
+        $stmt->execute();
+        $stmt->close();
+
+        $responses[] = "$fileName uploaded successfully";
+    } else {
+        $responses[] = "Error uploading $fileName";
+    }
+}
+
+echo implode("\n", $responses);
+?>

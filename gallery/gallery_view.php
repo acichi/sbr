@@ -1,25 +1,26 @@
-<!-- <head>
-  <meta charset="UTF-8">
-  <title>Gallery Viewer</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    .gallery-card img {
-      object-fit: cover;
-      height: 200px;
-    }
-    .pagination {
-      justify-content: center;
-    }
-  </style>
-</head> -->
-<body class="bg-light">
+<?php
+require __DIR__ . "/../properties/connection.php";
 
-<div class="container py-5">
-  <div id="gallery" class="row g-4"></div>
-  <nav>
-    <ul class="pagination mt-4" id="pagination"></ul>
-  </nav>
-</div>
+$query = $conn->query("SELECT * FROM gallery ORDER BY date_added DESC");
 
-<script src="gallery/js/gallery_view.js"></script>
-  </body>
+if(!$query || $query->num_rows == 0): ?>
+  <div class="text-center w-100">
+    <p class="text-muted">No photos yet. Upload from admin dashboard.</p>
+  </div>
+<?php else: ?>
+  <div class="gallery-flex">
+  <?php while ($row = $query->fetch_assoc()):
+    $imagePath = htmlspecialchars($row['location']);
+    $description = htmlspecialchars($row['description']);
+  ?>
+    <div class="gallery-item">
+      <a href="<?php echo $imagePath; ?>" 
+         data-fancybox="gallery" 
+         data-caption="<?php echo $description; ?>">
+        <img src="<?php echo $imagePath; ?>" alt="<?php echo $description; ?>">
+      </a>
+      <p class="caption"><?php echo $description; ?></p>
+    </div>
+  <?php endwhile; ?>
+  </div>
+<?php endif; ?>

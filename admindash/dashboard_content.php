@@ -10,88 +10,39 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
 $username = isset($_SESSION['user']['username']) ? htmlspecialchars($_SESSION['user']['username']) : 'Admin';
 
-/* =======================
-   HELPER: Check Column Exists
-   ======================= */
-function columnExists($conn, $table, $column) {
-    $result = $conn->query("SHOW COLUMNS FROM $table LIKE '$column'");
-    return ($result && $result->num_rows > 0);
-}
-
-/* =======================
-   FETCH COUNTS
-   ======================= */
-// Total Reservations
+/* ======================= FETCH STAT CARDS ======================= */
 $resQuery = $conn->query("SELECT COUNT(*) AS count FROM reservations");
 $totalReservations = $resQuery ? $resQuery->fetch_assoc()['count'] : 0;
 
-// Total Guests
 $guestQuery = $conn->query("SELECT COUNT(*) AS count FROM users WHERE role='customer'");
 $totalGuests = $guestQuery ? $guestQuery->fetch_assoc()['count'] : 0;
 
-// Total Sales
 $salesQuery = $conn->query("SELECT IFNULL(SUM(amount), 0) AS total FROM reservations");
 $totalSales = $salesQuery ? $salesQuery->fetch_assoc()['total'] : 0;
 
-/* =======================
-   FETCH SALES CHART DATA
-   ======================= */
-$chartLabels = [];
-$chartData = [];
-if (columnExists($conn, 'reservations', 'date_booked')) {
-    $query = $conn->query("
-        SELECT DATE_FORMAT(date_booked, '%b') as label, SUM(amount) as total 
-        FROM reservations 
-        GROUP BY MONTH(date_booked)
-        ORDER BY MONTH(date_booked)
-    ");
-    while ($row = $query->fetch_assoc()) {
-        $chartLabels[] = $row['label'];
-        $chartData[] = (float) $row['total'];
-    }
-}
-
-/* =======================
-   FETCH ALL RESERVATIONS
-   ======================= */
-$dateBookedColumn = columnExists($conn, 'reservations', 'date_booked') ? 'r.date_booked' : 'NOW() AS date_booked';
+/* ======================= FETCH RESERVATIONS ======================= */
 $allReservations = $conn->query("
-    SELECT r.reservee, u.email, r.facility_name, $dateBookedColumn, r.date_start, r.date_end, 
+    SELECT r.reservee, u.email, r.facility_name, r.date_booked, r.date_start, r.date_end, 
            r.payment_type, r.amount, r.status
     FROM reservations r
     LEFT JOIN users u ON u.username = r.reservee
     ORDER BY r.date_start DESC
 ");
 
-/* =======================
-   FETCH ALL ACCOUNTS
-   ======================= */
-$dateAddedColumn = columnExists($conn, 'users', 'date_added') ? 'date_added' : 'NOW() AS date_added';
+/* ======================= FETCH ACCOUNTS ======================= */
 $allAccounts = $conn->query("
-    SELECT username, fullname, email, role, $dateAddedColumn
+    SELECT username, fullname, email, role, date_added
     FROM users
     ORDER BY date_added DESC
 ");
 
-/* =======================
-   FETCH ALL FEEDBACKS
-   ======================= */
-$hasTimestamp = columnExists($conn, 'feedback', 'timestamp');
-$hasIsHidden = columnExists($conn, 'feedback', 'is_hidden');
-
-$timestampCol = $hasTimestamp ? 'timestamp' : 'NOW() AS timestamp';
-$isHiddenCol = $hasIsHidden ? 'is_hidden' : '0 AS is_hidden';
-
-$whereClause = $hasIsHidden ? "WHERE is_hidden = 0 OR is_hidden IS NULL" : ""; 
-
+/* ======================= FETCH FEEDBACKS ======================= */
 $allFeedbacks = $conn->query("
-    SELECT id, fullname, facility_name, feedback, rate, $timestampCol, $isHiddenCol 
+    SELECT id, fullname, facility_name, feedback, rate, timestamp, IFNULL(is_hidden,0) AS is_hidden
     FROM feedback
-    $whereClause
     ORDER BY timestamp DESC
 ");
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -99,16 +50,39 @@ $allFeedbacks = $conn->query("
   <title>Shelton Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- DataTables & Responsive -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+
   <link rel="stylesheet" href="styles.css">
   <style>
-    .btn {
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
+    .btn { padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    .hide-btn { background: #e08f5f; color: #fff; border: none; text-decoration: none; }
+    .unhide-btn { background: #7ab4a1; color: #fff; border: none; text-decoration: none; }
+    .hidden-row { background: #fce4e4; }
+
+    /* Mobile Improvements */
+    @media (max-width: 768px) {
+        .btn {
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+        table.dataTable td {
+            white-space: normal !important;
+        }
+        .box-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .box-info li {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .table-data {
+            flex-direction: column !important;
+        }
     }
-    .hide-btn { background: #e08f5f; color: #fff; border: none; }
-    .unhide-btn { background: #7ab4a1; color: #fff; border: none; }
   </style>
 </head>
 <body>
@@ -148,13 +122,12 @@ $allFeedbacks = $conn->query("
   </li>
 </ul>
 
-<!-- CHARTS: Sales & Feedback -->
+<!-- CHARTS -->
 <div class="table-data" style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:24px;">
-
   <!-- Sales Chart -->
-  <div class="todo" style="flex:1; min-width:300px;">
+  <div id="reports" class="todo" style="flex:1; min-width:300px;">
     <div class="head">
-      <h3 id="reports">Sales Overview</h3>
+      <h3>Sales Overview</h3>
       <select id="salesRangeSelect" style="margin-left:auto; padding:5px 10px; border:1px solid #ccc;">
         <option value="weekly">Weekly</option>
         <option value="monthly" selected>Monthly</option>
@@ -181,13 +154,11 @@ $allFeedbacks = $conn->query("
   </div>
 </div>
 
-
 <!-- RESERVATIONS TABLE -->
 <div class="table-data">
   <div class="order" style="width:100%; margin-bottom:20px;">
-    <div class="head">
-      <h3 id="reservation">All Reservations</h3></div>
-    <table>
+    <div class="head"><h3 >All Reservations</h3></div>
+    <table id="reservationsTable" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
       <thead>
         <tr>
           <th>Reservee</th><th>Email</th><th>Facility</th><th>Date Booked</th>
@@ -217,9 +188,8 @@ $allFeedbacks = $conn->query("
 
   <!-- ACCOUNTS TABLE -->
   <div class="order" style="width:100%; margin-bottom:20px;">
-    <div class="head">
-      <h3 id="accounts">All Accounts</h3></div>
-    <table>
+    <div class="head"><h3>All Accounts</h3></div>
+    <table id="accountsTable" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
       <thead>
         <tr>
           <th>Username</th><th>Full Name</th><th>Email</th><th>Role</th><th>Date Added</th>
@@ -242,88 +212,150 @@ $allFeedbacks = $conn->query("
     </table>
   </div>
 
-  <!-- FEEDBACK MANAGEMENT -->
-  <div class="order" style="width:100%;">
-    <div class="head">
-      <h3 id="feedback">Manage Feedbacks</h3></div>
-    <table>
-      <thead>
-        <tr>
-          <th>User</th><th>Facility</th><th>Rating</th><th>Comment</th><th>Date</th><th>Action</th>
+  <<!-- FEEDBACK MANAGEMENT -->
+<div class="order" style="width:100%;" id="feedback">
+  <div class="head"><h3>Manage Feedbacks</h3></div>
+  <table id="feedbackTable" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
+    <thead>
+      <tr>
+        <th>User</th><th>Facility</th><th>Rating</th><th>Comment</th><th>Date</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php if($allFeedbacks && $allFeedbacks->num_rows>0) {
+        while($row=$allFeedbacks->fetch_assoc()) { ?>
+        <tr class="<?php echo $row['is_hidden'] ? 'hidden-row' : ''; ?>">
+          <td><?php echo htmlspecialchars($row['fullname']); ?></td>
+          <td><?php echo htmlspecialchars($row['facility_name']); ?></td>
+          <td><?php for($i=0; $i<$row['rate']; $i++) echo "⭐"; ?></td>
+          <td><?php echo htmlspecialchars($row['feedback']); ?></td>
+          <td><?php echo date('m-d-Y', strtotime($row['timestamp'])); ?></td>
+          <td>
+            <?php if($row['is_hidden'] == 0) { ?>
+              <button class="btn hide-btn toggle-feedback" data-id="<?php echo $row['id']; ?>" data-action="hide">Hide</button>
+            <?php } else { ?>
+              <span style="color:red; font-weight:bold; margin-right:5px;">(Hidden)</span>
+              <button class="btn unhide-btn toggle-feedback" data-id="<?php echo $row['id']; ?>" data-action="unhide">Unhide</button>
+            <?php } ?>
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        <?php if($allFeedbacks && $allFeedbacks->num_rows>0) {
-          while($row=$allFeedbacks->fetch_assoc()) { ?>
-          <tr>
-            <td><?php echo htmlspecialchars($row['fullname']); ?></td>
-            <td><?php echo htmlspecialchars($row['facility_name']); ?></td>
-            <td><?php for($i=0; $i<$row['rate']; $i++) echo "⭐"; ?></td>
-            <td><?php echo htmlspecialchars($row['feedback']); ?></td>
-            <td><?php echo date('m-d-Y', strtotime($row['timestamp'])); ?></td>
-            <td>
-              <?php if($row['is_hidden'] == 0) { ?>
-                <button class="btn hide-btn">Hide</button>
-              <?php } else { ?>
-                <button class="btn unhide-btn">Unhide</button>
-              <?php } ?>
-            </td>
-          </tr>
-        <?php } } else { ?>
-          <tr><td colspan="6">No feedbacks found.</td></tr>
-        <?php } ?>
-      </tbody>
-    </table>
-  </div>
+      <?php } } else { ?>
+        <tr><td colspan="6">No feedbacks found.</td></tr>
+      <?php } ?>
+    </tbody>
+  </table>
 </div>
 
+
+<!-- ================== JS ================== -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
 <script>
-// ----- Sales Chart -----
-const salesCtx = document.getElementById('salesChart').getContext('2d');
-new Chart(salesCtx, {
-    type: 'line',
-    data: {
-        labels: <?php echo json_encode($chartLabels); ?>,
-        datasets: [{
-            label: 'Total Sales',
-            data: <?php echo json_encode($chartData); ?>,
-            borderColor: '#4bc0c0',
-            backgroundColor: 'rgba(75,192,192,0.2)',
-            borderWidth: 2,
-            tension: 0.3,
-            fill: true,
-            pointBackgroundColor: '#4bc0c0'
-        }]
-    },
-    options: { responsive: true, plugins: { legend: { display: false }}, scales: { y: { beginAtZero: true }} }
+/* DataTables Init */
+$('#reservationsTable').DataTable({
+    order: [[3, "desc"]],
+    pageLength: 5,
+    responsive: true
+});
+$('#accountsTable').DataTable({
+    order: [[4, "desc"]],
+    pageLength: 5,
+    responsive: true
+});
+$('#feedbackTable').DataTable({
+    order: [[4, "desc"]],
+    pageLength: 5,
+    responsive: true
 });
 
-// ----- Feedback Chart -----
-const feedbackCtx = document.getElementById('feedbackChart').getContext('2d');
-let feedbackChart = null;
+/* Sales Chart */
+let salesChart = null;
+function loadSalesChart(range = 'monthly') {
+    fetch('fetch_sales_chart.php?range=' + range)
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            if (salesChart) salesChart.destroy();
+            document.getElementById('totalSales').innerText = 'Total Sales: $' + data.total;
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Total Sales',
+                        data: data.counts,
+                        borderColor: '#4bc0c0',
+                        backgroundColor: 'rgba(75,192,192,0.2)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#4bc0c0'
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false }}, scales: { y: { beginAtZero: true }} }
+            });
+        });
+}
+loadSalesChart('monthly');
+document.getElementById('salesRangeSelect').addEventListener('change', (e) => loadSalesChart(e.target.value));
 
+/* Feedback Chart */
+let feedbackChart = null;
 function loadFeedbackChart(range = 'monthly') {
     fetch('fetch_feedback_chart.php?range=' + range)
-    .then(res => res.json())
-    .then(data => {
-        if (feedbackChart) feedbackChart.destroy();
-        feedbackChart = new Chart(feedbackCtx, {
-            type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Feedback Count',
-                    data: data.counts,
-                    backgroundColor: '#e08f5f',
-                    borderRadius: 6
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { display: false }}, scales: { y: { beginAtZero: true }} }
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById('feedbackChart').getContext('2d');
+            if (feedbackChart) feedbackChart.destroy();
+            feedbackChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Feedback Count',
+                        data: data.counts,
+                        backgroundColor: '#e08f5f',
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false }}, scales: { y: { beginAtZero: true }} }
+            });
         });
-    });
 }
 loadFeedbackChart('monthly');
-document.getElementById('feedbackRangeSelect').addEventListener('change', e => loadFeedbackChart(e.target.value));
+document.getElementById('feedbackRangeSelect').addEventListener('change', (e) => loadFeedbackChart(e.target.value));
+/* Toggle Feedback Hide/Unhide with SweetAlert */
+$(document).on('click', '.toggle-feedback', function () {
+    const id = $(this).data('id');
+    const action = $(this).data('action');
+
+    fetch(`hide_feedback.php?id=${id}&action=${action}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: `Feedback ${action === 'hide' ? 'hidden' : 'unhidden'}!`,
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire('Error', data.message, 'error');
+            }
+        })
+        .catch(err => {
+            Swal.fire('Error', 'Something went wrong!', 'error');
+        });
+});
+
+
 </script>
 </body>
 </html>

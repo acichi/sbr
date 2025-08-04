@@ -89,28 +89,40 @@
 
   <div class="otp-card text-center">
     <h4 class="otp-title">OTP Verification</h4>
-    <form method="POST" action="verify_otp.php" class="d-flex flex-column align-items-center">
+    <form method="POST" action="verify_otp.php" id="otpForm" class="d-flex flex-column align-items-center">
       <div class="otp-form">
-        <input type="text" name="otp1" maxlength="1" class="otp-input" required>
-        <input type="text" name="otp2" maxlength="1" class="otp-input" required>
-        <input type="text" name="otp3" maxlength="1" class="otp-input" required>
-        <input type="text" name="otp4" maxlength="1" class="otp-input" required>
-        <input type="text" name="otp5" maxlength="1" class="otp-input" required>
-        <input type="text" name="otp6" maxlength="1" class="otp-input" required>
+        <input type="text" maxlength="1" class="otp-input" required>
+        <input type="text" maxlength="1" class="otp-input" required>
+        <input type="text" maxlength="1" class="otp-input" required>
+        <input type="text" maxlength="1" class="otp-input" required>
+        <input type="text" maxlength="1" class="otp-input" required>
+        <input type="text" maxlength="1" class="otp-input" required>
       </div>
+      <!-- Hidden input to hold the combined OTP -->
+      <input type="hidden" name="otp" id="otp">
       <button type="submit" class="btn btn-theme w-100 py-2">Verify</button>
     </form>
   </div>
 
   <script>
-    // Auto-focus next input
     const inputs = document.querySelectorAll('.otp-input');
+    const otpField = document.getElementById('otp');
+    const form = document.getElementById('otpForm');
+
+    // Auto-focus next input
     inputs.forEach((input, i) => {
       input.addEventListener('input', () => {
         if (input.value && i < inputs.length - 1) {
           inputs[i + 1].focus();
         }
       });
+    });
+
+    // Combine values before submit
+    form.addEventListener('submit', () => {
+      let otpValue = '';
+      inputs.forEach(input => otpValue += input.value);
+      otpField.value = otpValue;
     });
   </script>
 
